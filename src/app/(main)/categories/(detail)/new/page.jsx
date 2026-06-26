@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Alert,
   Box,
@@ -18,6 +19,10 @@ import {
 } from "@mui/material";
 import { categoryService } from "@/api/category/categoryService";
 import ChildCategoryEditor from "../_components/ChildCategoryEditor";
+
+const categoryKeys = {
+  all: ["categories"],
+};
 
 const flattenCategories = (categories, prefix = "") =>
   categories.flatMap((category) => {
@@ -36,42 +41,34 @@ const flattenCategories = (categories, prefix = "") =>
 
 export default function CategoryCreatePage() {
   const router = useRouter();
-  const [parentCategories, setParentCategories] = useState([]);
   const [childCategories, setChildCategories] = useState([]);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isLoadingParents, setIsLoadingParents] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const parentCategoriesQuery = useQuery({
+    queryKey: categoryKeys.all,
+    queryFn: () => categoryService.getCategories(),
+    select: (categories) =>
+      flattenCategories(Array.isArray(categories) ? categories : []),
+  });
+
+  const createCategoryMutation = useMutation({
+    mutationFn: categoryService.createCategory,
+    onSuccess: () => {
+      router.push("/categories");
+    },
+  });
 
   const parentCategoryOptions = useMemo(
-    () => flattenCategories(parentCategories),
-    [parentCategories],
+    () => parentCategoriesQuery.data ?? [],
+    [parentCategoriesQuery.data],
   );
 
   const handleChildRowsChange = useCallback((rows) => {
     setChildCategories(rows);
   }, []);
 
-  useEffect(() => {
-    const loadParentCategories = async () => {
-      setIsLoadingParents(true);
-
-      try {
-        const categories = await categoryService.getCategories();
-        setParentCategories(Array.isArray(categories) ? categories : []);
-      } catch {
-        setParentCategories([]);
-      } finally {
-        setIsLoadingParents(false);
-      }
-    };
-
-    loadParentCategories();
-  }, []);
-
-  const handleSubmit = async (event) => {
+  const handleSubmit = (event) => {
     event.preventDefault();
-    setErrorMessage("");
-    setIsSubmitting(true);
+    createCategoryMutation.reset();
 
     const formData = new FormData(event.currentTarget);
     const name = String(formData.get("name") ?? "").trim();
@@ -95,26 +92,24 @@ export default function CategoryCreatePage() {
         children: [],
       }));
 
-    try {
-      await categoryService.createCategory({
-        id: null,
-        depth,
-        name,
-        parentCategoryId,
-        children,
-      });
-
-      router.push("/categories");
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "카테고리 등록 중 오류가 발생했습니다.",
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+    createCategoryMutation.mutate({
+      id: null,
+      depth,
+      name,
+      parentCategoryId,
+      children,
+    });
   };
+
+  const error = createCategoryMutation.error ?? parentCategoriesQuery.error;
+  const errorMessage =
+    error instanceof Error
+      ? error.message
+      : error
+        ? "카테고리 처리 중 오류가 발생했습니다."
+        : "";
+  const isLoadingParents = parentCategoriesQuery.isLoading;
+  const isSubmitting = createCategoryMutation.isPending;
 
   return (
     <Stack spacing={2.5}>
@@ -141,7 +136,7 @@ export default function CategoryCreatePage() {
             disabled={isSubmitting}
             label="카테고리 명"
             name="name"
-            placeholder="카테고리 명을 입력하세요."
+            placeholder="카테고리 명을 입력하세요"
           />
           <FormControl>
             <InputLabel id="parent-category-label">상위 카테고리</InputLabel>

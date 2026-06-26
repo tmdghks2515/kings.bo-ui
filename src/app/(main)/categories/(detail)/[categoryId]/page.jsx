@@ -1,9 +1,13 @@
 "use client";
 
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  Alert,
   Box,
   Button,
+  CircularProgress,
   FormControl,
   InputLabel,
   MenuItem,
@@ -13,71 +17,152 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { categoryService } from "@/api/category/categoryService";
 import ChildCategoryEditor from "../_components/ChildCategoryEditor";
 
-const categoryMap = {
-  1: {
-    name: "신상품",
-    parent: "",
-    order: 1,
-    status: "use",
-    children: [
-      { id: "1-1", name: "오늘의 신상품", displayOrder: 1, status: "use" },
-      { id: "1-2", name: "이번 주 신상품", displayOrder: 2, status: "use" },
-    ],
-  },
-  2: {
-    name: "베스트",
-    parent: "",
-    order: 2,
-    status: "use",
-    children: [
-      { id: "2-1", name: "주간 베스트", displayOrder: 1, status: "use" },
-      { id: "2-2", name: "월간 베스트", displayOrder: 2, status: "use" },
-    ],
-  },
-  3: {
-    name: "아우터",
-    parent: "women",
-    order: 3,
-    status: "use",
-    children: [
-      { id: "3-1", name: "재킷", displayOrder: 1, status: "use" },
-      { id: "3-2", name: "코트", displayOrder: 2, status: "unused" },
-    ],
-  },
-  4: {
-    name: "액세서리",
-    parent: "",
-    order: 4,
-    status: "unused",
-    children: [
-      { id: "4-1", name: "가방", displayOrder: 1, status: "use" },
-      { id: "4-2", name: "주얼리", displayOrder: 2, status: "unused" },
-    ],
-  },
-  5: {
-    name: "기획전",
-    parent: "",
-    order: 5,
-    status: "use",
-    children: [
-      { id: "5-1", name: "시즌 기획전", displayOrder: 1, status: "use" },
-      { id: "5-2", name: "브랜드 기획전", displayOrder: 2, status: "use" },
-    ],
-  },
+const categoryKeys = {
+  all: ["categories"],
+  detail: (categoryId) => ["categories", categoryId],
 };
+
+const collectCategoryIds = (category) => [
+  category.id,
+  ...(category.children ?? []).flatMap(collectCategoryIds),
+];
+
+const flattenCategories = (categories, excludedIds = new Set(), prefix = "") =>
+  categories.flatMap((category) => {
+    if (excludedIds.has(category.id)) {
+      return [];
+    }
+
+    const label = prefix ? `${prefix} > ${category.name}` : category.name;
+    const item = {
+      id: category.id,
+      depth: category.depth,
+      label,
+    };
+
+    return [
+      item,
+      ...flattenCategories(category.children ?? [], excludedIds, label),
+    ];
+  });
+
+const toChildRows = (children = []) =>
+  children.map((child, index) => ({
+    id: child.id,
+    name: child.name,
+    displayOrder: index + 1,
+    status: "use",
+  }));
+
+const toChildCommands = (children, depth) =>
+  children
+    .map((child) => ({
+      ...child,
+      name: child.name.trim(),
+    }))
+    .filter((child) => child.name)
+    .map((child) => ({
+      id: typeof child.id === "number" ? child.id : null,
+      depth,
+      name: child.name,
+      parentCategoryId: null,
+      children: [],
+    }));
 
 export default function CategoryDetailPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { categoryId } = useParams();
-  const category = categoryMap[categoryId] ?? {
-    name: "",
-    parent: "",
-    order: 1,
-    status: "use",
-    children: [],
+  const [name, setName] = useState("");
+  const [parentCategoryId, setParentCategoryId] = useState("");
+  const [childCategories, setChildCategories] = useState([]);
+
+  const categoryQuery = useQuery({
+    queryKey: categoryKeys.detail(categoryId),
+    queryFn: () => categoryService.getCategory(categoryId),
+    enabled: Boolean(categoryId),
+  });
+
+  const parentCategoriesQuery = useQuery({
+    queryKey: categoryKeys.all,
+    queryFn: () => categoryService.getCategories(),
+  });
+
+  const updateCategoryMutation = useMutation({
+    mutationFn: (payload) => categoryService.updateCategory(categoryId, payload),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: categoryKeys.all }),
+        queryClient.invalidateQueries({
+          queryKey: categoryKeys.detail(categoryId),
+        }),
+      ]);
+      router.push("/categories");
+    },
+  });
+
+  const category = categoryQuery.data;
+
+  const parentCategoryOptions = useMemo(() => {
+    const categories = Array.isArray(parentCategoriesQuery.data)
+      ? parentCategoriesQuery.data
+      : [];
+    const excludedIds = category ? new Set(collectCategoryIds(category)) : new Set();
+
+    return flattenCategories(categories, excludedIds);
+  }, [category, parentCategoriesQuery.data]);
+
+  const initialChildRows = useMemo(
+    () => toChildRows(category?.children ?? []),
+    [category],
+  );
+
+  useEffect(() => {
+    if (!category) {
+      return;
+    }
+
+    setName(category.name ?? "");
+    setParentCategoryId(category.parentCategoryId ?? "");
+  }, [category]);
+
+  const handleChildRowsChange = useCallback((rows) => {
+    setChildCategories(rows);
+  }, []);
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    updateCategoryMutation.reset();
+
+    const selectedParent = parentCategoryOptions.find(
+      (option) => String(option.id) === String(parentCategoryId),
+    );
+    const depth = selectedParent ? selectedParent.depth + 1 : 0;
+
+    updateCategoryMutation.mutate({
+      id: Number(categoryId),
+      depth,
+      name: name.trim(),
+      parentCategoryId: selectedParent ? selectedParent.id : null,
+      children: toChildCommands(childCategories, depth + 1),
+    });
   };
+
+  const error =
+    updateCategoryMutation.error ??
+    categoryQuery.error ??
+    parentCategoriesQuery.error;
+  const errorMessage =
+    error instanceof Error
+      ? error.message
+      : error
+        ? "카테고리 처리 중 오류가 발생했습니다."
+        : "";
+  const isLoading = categoryQuery.isLoading || parentCategoriesQuery.isLoading;
+  const isSubmitting = updateCategoryMutation.isPending;
 
   return (
     <Stack spacing={2.5}>
@@ -91,56 +176,75 @@ export default function CategoryDetailPage() {
       </Box>
 
       <Paper elevation={0} sx={{ border: 1, borderColor: "divider", p: 3 }}>
-        <Stack component="form" spacing={2.5} sx={{ maxWidth: 640 }}>
-          <TextField
-            disabled
-            label="카테고리 ID"
-            value={categoryId}
-          />
+        <Stack
+          component="form"
+          spacing={2.5}
+          sx={{ maxWidth: 760 }}
+          onSubmit={handleSubmit}
+        >
+          {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
+
+          <TextField disabled label="카테고리 ID" value={categoryId ?? ""} />
           <TextField
             required
-            defaultValue={category.name}
+            disabled={isLoading || isSubmitting}
             label="카테고리 명"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
           />
           <FormControl>
             <InputLabel id="parent-category-label">상위 카테고리</InputLabel>
             <Select
-              defaultValue={category.parent}
+              disabled={isLoading || isSubmitting}
               label="상위 카테고리"
               labelId="parent-category-label"
+              value={parentCategoryId}
+              onChange={(event) => setParentCategoryId(event.target.value)}
             >
               <MenuItem value="">없음</MenuItem>
-              <MenuItem value="new">신상품</MenuItem>
-              <MenuItem value="best">베스트</MenuItem>
-              <MenuItem value="women">여성의류</MenuItem>
+              {parentCategoryOptions.map((categoryOption) => (
+                <MenuItem key={categoryOption.id} value={categoryOption.id}>
+                  {categoryOption.label}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
           <TextField
-            defaultValue={category.order}
-            inputProps={{ min: 1 }}
-            label="노출 순서"
-            type="number"
+            disabled
+            label="Depth"
+            value={
+              parentCategoryId
+                ? (parentCategoryOptions.find(
+                    (option) => String(option.id) === String(parentCategoryId),
+                  )?.depth ?? -1) + 1
+                : 0
+            }
           />
-          <FormControl>
-            <InputLabel id="category-status-label">상태</InputLabel>
-            <Select
-              defaultValue={category.status}
-              label="상태"
-              labelId="category-status-label"
-            >
-              <MenuItem value="use">사용</MenuItem>
-              <MenuItem value="unused">미사용</MenuItem>
-            </Select>
-          </FormControl>
 
-          <ChildCategoryEditor initialRows={category.children} />
+          <ChildCategoryEditor
+            key={category?.id ?? "loading"}
+            initialRows={initialChildRows}
+            onRowsChange={handleChildRowsChange}
+          />
 
           <Stack direction="row" justifyContent="flex-end" spacing={1}>
-            <Button color="inherit" onClick={() => router.push("/categories")}>
+            <Button
+              color="inherit"
+              disabled={isSubmitting}
+              onClick={() => router.push("/categories")}
+            >
               목록
             </Button>
-            <Button variant="contained" onClick={() => router.push("/categories")}>
-              저장
+            <Button
+              disabled={isLoading || isSubmitting}
+              type="submit"
+              variant="contained"
+            >
+              {isSubmitting ? (
+                <CircularProgress color="inherit" size={20} />
+              ) : (
+                "저장"
+              )}
             </Button>
           </Stack>
         </Stack>

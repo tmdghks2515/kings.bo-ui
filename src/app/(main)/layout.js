@@ -1,3 +1,5 @@
+'use client'
+
 import { Box, Container, Toolbar } from "@mui/material";
 import Header from "./_components/Header";
 import Lnb from "./_components/Lnb";

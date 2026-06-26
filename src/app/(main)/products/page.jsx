@@ -16,112 +16,129 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { categoryService } from "@/api/category/categoryService";
+import { productService } from "@/api/product/productService";
 import useConfirm from "@/hooks/useConfirm";
 
-const categoryKeys = {
-  all: ["categories"],
+const productKeys = {
+  all: ["products"],
 };
 
-const flattenCategories = (categories, parentName = "-") =>
-  categories.flatMap((category) => {
-    const row = {
-      id: category.id,
-      name: category.name,
-      depth: category.depth,
-      parentName,
-      childCount: category.children?.length ?? 0,
-    };
+const normalizeProducts = (response) => {
+  const products = Array.isArray(response)
+    ? response
+    : Array.isArray(response?.content)
+      ? response.content
+      : Array.isArray(response?.items)
+        ? response.items
+        : [];
 
-    return [
-      row,
-      ...flattenCategories(category.children ?? [], category.name),
-    ];
-  });
+  return products.map((product) => ({
+    ...product,
+    id: product.id ?? product.code,
+    categoryName: product.categoryName ?? product.category?.name ?? "-",
+    optionCount: product.optionCount ?? product.options?.length ?? 0,
+  }));
+};
 
-export default function CategoryListPage() {
+const formatPrice = (value) => {
+  if (value === undefined || value === null || value === "") {
+    return "-";
+  }
+
+  return new Intl.NumberFormat("ko-KR", {
+    maximumFractionDigits: 0,
+  }).format(Number(value));
+};
+
+export default function ProductListPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const confirm = useConfirm();
   const [rowSelectionModel, setRowSelectionModel] = useState([]);
 
-  const categoriesQuery = useQuery({
-    queryKey: categoryKeys.all,
-    queryFn: () => categoryService.getCategories(),
-    select: (categories) =>
-      flattenCategories(Array.isArray(categories) ? categories : []),
+  const productsQuery = useQuery({
+    queryKey: productKeys.all,
+    queryFn: () => productService.getProducts(),
+    select: normalizeProducts,
   });
 
-  const deleteCategoriesMutation = useMutation({
-    mutationFn: categoryService.deleteCategories,
+  const deleteProductsMutation = useMutation({
+    mutationFn: productService.deleteProducts,
     onSuccess: async () => {
       setRowSelectionModel([]);
-      await queryClient.invalidateQueries({ queryKey: categoryKeys.all });
+      await queryClient.invalidateQueries({ queryKey: productKeys.all });
     },
   });
 
   const columns = useMemo(
     () => [
       {
-        field: "name",
-        headerName: "카테고리 명",
-        flex: 1,
-        minWidth: 180,
+        field: "code",
+        headerName: "상품 코드",
+        flex: 0.8,
+        minWidth: 150,
         renderCell: (params) => (
-          <Link color="primary" href={`/categories/${params.row.id}`}>
+          <Link color="primary" href={`/products/${params.row.code}`}>
             {params.value}
           </Link>
         ),
       },
       {
-        field: "depth",
-        headerName: "Depth",
-        align: "center",
-        headerAlign: "center",
-        width: 90,
+        field: "name",
+        headerName: "상품명",
+        flex: 1.2,
+        minWidth: 220,
       },
       {
-        field: "parentName",
-        headerName: "상위 카테고리",
+        field: "categoryName",
+        headerName: "카테고리",
         flex: 0.8,
-        minWidth: 140,
+        minWidth: 160,
       },
       {
-        field: "childCount",
-        headerName: "하위 카테고리 수",
+        field: "price",
+        headerName: "판매가",
         align: "right",
         headerAlign: "right",
-        width: 150,
+        minWidth: 130,
+        valueFormatter: (value) => formatPrice(value),
+      },
+      {
+        field: "optionCount",
+        headerName: "옵션 수",
+        align: "right",
+        headerAlign: "right",
+        width: 110,
       },
     ],
     [],
   );
 
   const handleDeleteClick = async () => {
-    deleteCategoriesMutation.reset();
+    deleteProductsMutation.reset();
 
     const confirmed = await confirm({
-      title: "카테고리 삭제",
-      content: `선택한 카테고리 ${rowSelectionModel.length}개를 삭제하시겠습니까? 하위 카테고리가 함께 삭제될 수 있습니다.`,
+      title: "상품 삭제",
+      content: `선택한 상품 ${rowSelectionModel.length}개를 삭제하시겠습니까?`,
       confirmText: "삭제",
       icon: <DeleteIcon color="error" fontSize="small" />,
       variant: "danger",
     });
 
     if (confirmed) {
-      deleteCategoriesMutation.mutate(rowSelectionModel);
+      deleteProductsMutation.mutate(rowSelectionModel);
     }
   };
 
-  const error = deleteCategoriesMutation.error ?? categoriesQuery.error;
+  const error = deleteProductsMutation.error ?? productsQuery.error;
   const errorMessage =
     error instanceof Error
       ? error.message
       : error
-        ? "카테고리 처리 중 오류가 발생했습니다."
+        ? "상품 처리 중 오류가 발생했습니다."
         : "";
-  const isLoading = categoriesQuery.isLoading || categoriesQuery.isFetching;
-  const isDeleting = deleteCategoriesMutation.isPending;
+  const isLoading = productsQuery.isLoading || productsQuery.isFetching;
+  const isDeleting = deleteProductsMutation.isPending;
   const selectedCount = rowSelectionModel.length;
 
   return (
@@ -136,10 +153,10 @@ export default function CategoryListPage() {
       >
         <Box>
           <Typography component="h2" variant="h5" sx={{ fontWeight: 800 }}>
-            카테고리 관리
+            상품 관리
           </Typography>
           <Typography color="text.secondary" variant="body2">
-            전시 카테고리 구조를 관리합니다.
+            상품 목록과 기본 판매 정보를 관리합니다.
           </Typography>
         </Box>
 
@@ -162,7 +179,7 @@ export default function CategoryListPage() {
           <Button
             startIcon={<AddIcon fontSize="small" />}
             variant="contained"
-            onClick={() => router.push("/categories/new")}
+            onClick={() => router.push("/products/new")}
           >
             생성
           </Button>
@@ -185,7 +202,7 @@ export default function CategoryListPage() {
           loading={isLoading}
           pageSizeOptions={[10, 25, 50]}
           rowSelectionModel={rowSelectionModel}
-          rows={categoriesQuery.data ?? []}
+          rows={productsQuery.data ?? []}
           initialState={{
             pagination: {
               paginationModel: { page: 0, pageSize: 10 },

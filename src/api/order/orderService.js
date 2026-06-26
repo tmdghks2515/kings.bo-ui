@@ -1,4 +1,4 @@
-import { httpClient } from "../common/httpClient";
+import { httpClient } from "../httpClient";
 
 export const orderService = {
   getOrders(params) {

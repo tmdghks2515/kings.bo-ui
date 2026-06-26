@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import {
   Box,
   Button,
@@ -19,19 +20,28 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 
-const createChildCategory = (order) => ({
-  id: `new-${order}`,
-  name: "",
-  displayOrder: order,
-  status: "use",
-});
-
 const EMPTY_ROWS = [];
 
-export default function ChildCategoryEditor({
+const optionTypes = [
+  { label: "용량", value: "CAPACITY" },
+  { label: "색상", value: "COLOR" },
+  { label: "사이즈", value: "SIZE" },
+  { label: "기타", value: "ETC" },
+];
+
+const createOptionRow = (order) => ({
+  id: `new-${order}`,
+  name: "",
+  price: "",
+  type: "ETC",
+});
+
+export default function ProductOptionEditor({
+  disabled = false,
   initialRows = EMPTY_ROWS,
   onRowsChange,
 }) {
@@ -47,23 +57,17 @@ export default function ChildCategoryEditor({
     onRowsChange?.(rows);
   }, [onRowsChange, rows]);
 
-  const updateRows = (updater) => {
-    setRows((currentRows) =>
-      typeof updater === "function" ? updater(currentRows) : updater,
-    );
-  };
-
   const handleAdd = () => {
-    updateRows((currentRows) => [...currentRows, createChildCategory(nextOrder)]);
+    setRows((currentRows) => [...currentRows, createOptionRow(nextOrder)]);
     setNextOrder((currentOrder) => currentOrder + 1);
   };
 
   const handleRemove = (id) => {
-    updateRows((currentRows) => currentRows.filter((row) => row.id !== id));
+    setRows((currentRows) => currentRows.filter((row) => row.id !== id));
   };
 
   const handleChange = (id, field, value) => {
-    updateRows((currentRows) =>
+    setRows((currentRows) =>
       currentRows.map((row) =>
         row.id === id
           ? {
@@ -85,11 +89,15 @@ export default function ChildCategoryEditor({
       >
         <Box>
           <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
-            하위 카테고리
+            상품 옵션
+          </Typography>
+          <Typography color="text.secondary" variant="body2">
+            색상, 사이즈 등 판매 옵션이 필요한 경우 추가합니다.
           </Typography>
         </Box>
 
         <Button
+          disabled={disabled}
           startIcon={<AddIcon fontSize="small" />}
           variant="outlined"
           onClick={handleAdd}
@@ -98,7 +106,21 @@ export default function ChildCategoryEditor({
         </Button>
       </Stack>
 
-      {rows.length === 0 ? (<></>
+      {rows.length === 0 ? (
+        <Box
+          sx={{
+            border: 1,
+            borderColor: "divider",
+            borderRadius: 1,
+            px: 2,
+            py: 3,
+            textAlign: "center",
+          }}
+        >
+          <Typography color="text.secondary" variant="body2">
+            등록된 옵션이 없습니다.
+          </Typography>
+        </Box>
       ) : (
         <TableContainer
           sx={{
@@ -111,9 +133,21 @@ export default function ChildCategoryEditor({
           <Table size="small" sx={{ minWidth: 720 }}>
             <TableHead>
               <TableRow sx={{ bgcolor: "grey.50" }}>
-                <TableCell sx={{ fontWeight: 700 }}>하위 카테고리 명</TableCell>
-                <TableCell sx={{ fontWeight: 700, width: 140 }}>노출 순서</TableCell>
-                <TableCell sx={{ fontWeight: 700, width: 160 }}>상태</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>옵션명</TableCell>
+                <TableCell sx={{ fontWeight: 700, width: 190 }}>
+                  <Stack alignItems="center" direction="row" spacing={0.5}>
+                    <span>옵션 판매가</span>
+                    <Tooltip
+                      arrow
+                      title="비워두면 상품 기본 판매가를 사용하고, 값을 입력하면 해당 옵션은 입력한 가격으로 판매됩니다."
+                    >
+                      <HelpOutlineIcon color="action" fontSize="small" />
+                    </Tooltip>
+                  </Stack>
+                </TableCell>
+                <TableCell sx={{ fontWeight: 700, width: 180 }}>
+                  옵션 유형
+                </TableCell>
                 <TableCell align="center" sx={{ fontWeight: 700, width: 80 }}>
                   삭제
                 </TableCell>
@@ -125,7 +159,8 @@ export default function ChildCategoryEditor({
                   <TableCell>
                     <TextField
                       fullWidth
-                      placeholder="하위 카테고리 명"
+                      disabled={disabled}
+                      placeholder="옵션명을 입력하세요"
                       size="small"
                       value={row.name}
                       onChange={(event) =>
@@ -136,42 +171,48 @@ export default function ChildCategoryEditor({
                   <TableCell>
                     <TextField
                       fullWidth
+                      disabled={disabled}
+                      inputProps={{ min: 0 }}
+                      placeholder="기본가 사용"
                       size="small"
                       type="number"
-                      value={row.displayOrder}
+                      value={row.price}
                       onChange={(event) =>
-                        handleChange(row.id, "displayOrder", Number(event.target.value))
+                        handleChange(row.id, "price", event.target.value)
                       }
                     />
                   </TableCell>
                   <TableCell>
                     <FormControl fullWidth size="small">
-                      <InputLabel id={`child-category-status-${row.id}`}>
-                        상태
-                      </InputLabel>
+                      <InputLabel id={`option-type-${row.id}`}>유형</InputLabel>
                       <Select
-                        label="상태"
-                        labelId={`child-category-status-${row.id}`}
-                        value={row.status}
+                        disabled={disabled}
+                        label="유형"
+                        labelId={`option-type-${row.id}`}
+                        value={row.type}
                         onChange={(event) =>
-                          handleChange(row.id, "status", event.target.value)
+                          handleChange(row.id, "type", event.target.value)
                         }
                       >
-                        <MenuItem value="use">사용</MenuItem>
-                        <MenuItem value="unused">미사용</MenuItem>
+                        {optionTypes.map((type) => (
+                          <MenuItem key={type.value} value={type.value}>
+                            {type.label}
+                          </MenuItem>
+                        ))}
                       </Select>
                     </FormControl>
                   </TableCell>
                   <TableCell align="center">
                     <IconButton
-                      aria-label={`${index + 1}번째 하위 카테고리 삭제`}
-                    color="error"
-                    size="small"
-                    onClick={() => handleRemove(row.id)}
-                  >
+                      aria-label={`${index + 1}번째 옵션 삭제`}
+                      color="error"
+                      disabled={disabled}
+                      size="small"
+                      onClick={() => handleRemove(row.id)}
+                    >
                       <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </TableCell>
+                    </IconButton>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

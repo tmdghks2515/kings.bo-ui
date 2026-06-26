@@ -4,6 +4,8 @@ const ACCESS_TOKEN_KEY =
 const TOKEN_TYPE_KEY =
   process.env.NEXT_PUBLIC_TOKEN_TYPE_KEY ?? "kings.bo.tokenType";
 const TOKEN_EXPIRES_AT_KEY = `${ACCESS_TOKEN_KEY}.expiresAt`;
+const AUTH_STORE_KEY = "kings.bo.auth";
+const LOGIN_PATH = "/login";
 
 const getStoredAuthHeader = () => {
   if (typeof window === "undefined") {
@@ -30,12 +32,29 @@ const buildUrl = (path, params) => {
   return API_BASE_URL ? url.toString() : `${url.pathname}${url.search}`;
 };
 
+const redirectToLogin = () => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  authTokenStorage.clear();
+  window.localStorage.removeItem(AUTH_STORE_KEY);
+
+  if (window.location.pathname !== LOGIN_PATH) {
+    window.location.replace(LOGIN_PATH);
+  }
+};
+
 const parseResponse = async (response) => {
   const contentType = response.headers.get("content-type");
   const hasJson = contentType?.includes("application/json");
   const data = hasJson ? await response.json() : await response.text();
 
   if (!response.ok) {
+    if (response.status === 401) {
+      redirectToLogin();
+    }
+
     const message = data?.message || response.statusText || "API request failed";
     throw new Error(message);
   }
@@ -45,14 +64,16 @@ const parseResponse = async (response) => {
 
 export const httpClient = {
   async request(path, { method = "GET", params, body, headers, ...options } = {}) {
+    const isFormData =
+      typeof FormData !== "undefined" && body instanceof FormData;
     const response = await fetch(buildUrl(path, params), {
       method,
       headers: {
-        ...(body ? { "Content-Type": "application/json" } : {}),
+        ...(body && !isFormData ? { "Content-Type": "application/json" } : {}),
         ...getStoredAuthHeader(),
         ...headers,
       },
-      body: body ? JSON.stringify(body) : undefined,
+      body: body ? (isFormData ? body : JSON.stringify(body)) : undefined,
       credentials: "include",
       ...options,
     });

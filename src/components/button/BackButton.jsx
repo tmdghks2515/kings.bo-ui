@@ -4,15 +4,14 @@ import { useRouter } from "next/navigation";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Button } from "@mui/material";
 
-export default function BackButton({ children = "뒤로가기", onClick, ...props }) {
+export default function BackButton({ children, onClick, ...props }) {
   const router = useRouter();
 
   return (
     <Button
-      color="inherit"
       startIcon={<ArrowBackIcon fontSize="small" />}
       sx={{ alignSelf: "flex-start", ...props.sx }}
-      variant="outlined"
+      variant={"text"}
       onClick={onClick ?? (() => router.back())}
       {...props}
     >

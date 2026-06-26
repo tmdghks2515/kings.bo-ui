@@ -1,5 +1,7 @@
 import "./globals.css";
 import MuiThemeProvider from "../theme/MuiThemeProvider";
+import ConfirmProvider from "@/providers/ConfirmProvider";
+import QueryProvider from "@/providers/QueryProvider";
 
 export const metadata = {
   title: "bo-ui",
@@ -8,9 +10,13 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="ko">
+    <html lang="ko" suppressHydrationWarning>
       <body>
-        <MuiThemeProvider>{children}</MuiThemeProvider>
+        <QueryProvider>
+          <MuiThemeProvider>
+            <ConfirmProvider>{children}</ConfirmProvider>
+          </MuiThemeProvider>
+        </QueryProvider>
       </body>
     </html>
   );

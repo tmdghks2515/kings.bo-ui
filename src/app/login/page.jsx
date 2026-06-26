@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 import {
   Alert,
   Box,
@@ -17,7 +18,7 @@ import {
   Typography,
 } from "@mui/material";
 import { authService } from "@/api/auth/authService";
-import { authTokenStorage } from "@/api/common/httpClient";
+import { authTokenStorage } from "@/api/httpClient";
 import { useAuthStore } from "@/stores/authStore";
 
 const SAVED_USERNAME_KEY = "kings.bo.savedUsername";
@@ -27,51 +28,51 @@ export default function LoginPage() {
   const setAuth = useAuthStore((state) => state.setAuth);
   const [username, setUsername] = useState("");
   const [rememberUsername, setRememberUsername] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    const username = window.localStorage.getItem(SAVED_USERNAME_KEY) ?? "";
-
-    setUsername(username);
-    setRememberUsername(Boolean(username));
-  }, []);
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setErrorMessage("");
-    setIsSubmitting(true);
-
-    const formData = new FormData(event.currentTarget);
-    const submittedUsername = String(formData.get("username") ?? "").trim();
-    const password = String(formData.get("password") ?? "");
-
-    try {
-      const authResult = await authService.login({
-        username: submittedUsername,
-        password,
-      });
-
+  const loginMutation = useMutation({
+    mutationFn: authService.login,
+    onSuccess: (authResult, variables) => {
       authTokenStorage.set(authResult);
       setAuth(authResult);
 
       if (rememberUsername) {
-        window.localStorage.setItem(SAVED_USERNAME_KEY, submittedUsername);
+        window.localStorage.setItem(SAVED_USERNAME_KEY, variables.username);
       } else {
         window.localStorage.removeItem(SAVED_USERNAME_KEY);
       }
 
       router.push("/");
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "로그인 처리 중 오류가 발생했습니다.",
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+    },
+  });
+
+  useEffect(() => {
+    const savedUsername = window.localStorage.getItem(SAVED_USERNAME_KEY) ?? "";
+
+    setUsername(savedUsername);
+    setRememberUsername(Boolean(savedUsername));
+  }, []);
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    loginMutation.reset();
+
+    const formData = new FormData(event.currentTarget);
+    const submittedUsername = String(formData.get("username") ?? "").trim();
+    const password = String(formData.get("password") ?? "");
+
+    loginMutation.mutate({
+      username: submittedUsername,
+      password,
+    });
   };
+
+  const errorMessage =
+    loginMutation.error instanceof Error
+      ? loginMutation.error.message
+      : loginMutation.isError
+        ? "로그인 처리 중 오류가 발생했습니다."
+        : "";
+  const isSubmitting = loginMutation.isPending;
 
   return (
     <Box

@@ -1,4 +1,4 @@
-import { httpClient } from "../common/httpClient";
+import { httpClient } from "../httpClient";
 
 export const categoryService = {
   getCategories(params) {
@@ -17,15 +17,9 @@ export const categoryService = {
     return httpClient.put(`/api/product-categories/${categoryId}`, payload);
   },
 
-  deleteCategory(categoryId) {
-    return httpClient.delete(`/api/product-categories/${categoryId}`);
-  },
-
   deleteCategories(categoryIds) {
-    return Promise.all(
-      categoryIds.map((categoryId) =>
-        httpClient.delete(`/api/product-categories/${categoryId}`),
-      ),
-    );
+    return httpClient.post("/api/product-categories/delete", {
+      categoryIds,
+    });
   },
 };
