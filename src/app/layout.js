@@ -1,4 +1,5 @@
 import "./globals.css";
+import MuiThemeProvider from "../theme/MuiThemeProvider";
 
 export const metadata = {
   title: "bo-ui",
@@ -8,7 +9,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="ko">
-      <body>{children}</body>
+      <body>
+        <MuiThemeProvider>{children}</MuiThemeProvider>
+      </body>
     </html>
   );
 }
