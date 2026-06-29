@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import { categoryService } from "@/api/category/categoryService";
 import { productService } from "@/api/product/productService";
-import ProductCategorySelect from "@/app/(main)/products/(detail)/_components/ProductCategorySelect";
+import CategorySelect from "@/app/(main)/products/(detail)/_components/CategorySelect";
 import ProductImageEditor from "@/app/(main)/products/(detail)/_components/ProductImageEditor";
 import ProductOptionEditor from "@/app/(main)/products/(detail)/_components/ProductOptionEditor";
 
@@ -234,7 +234,7 @@ export default function ProductDetailPage() {
                   value={price}
                   onChange={(event) => setPrice(event.target.value)}
                 />
-                <ProductCategorySelect
+                <CategorySelect
                   categories={categoriesQuery.data ?? []}
                   disabled={isLoading || isSubmitting || isLoadingCategories}
                   value={categoryId}

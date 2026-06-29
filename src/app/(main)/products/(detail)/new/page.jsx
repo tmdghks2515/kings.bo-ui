@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { categoryService } from "@/api/category/categoryService";
 import { productService } from "@/api/product/productService";
-import ProductCategorySelect from "@/app/(main)/products/(detail)/_components/ProductCategorySelect";
+import CategorySelect from "@/app/(main)/products/(detail)/_components/CategorySelect";
 import ProductOptionEditor from "@/app/(main)/products/(detail)/_components/ProductOptionEditor";
 
 const productKeys = {
@@ -140,7 +140,7 @@ export default function ProductCreatePage() {
               placeholder="0"
               type="number"
             />
-            <ProductCategorySelect
+            <CategorySelect
               categories={categoriesQuery.data ?? []}
               disabled={isSubmitting || isLoadingCategories}
               value={categoryId}

@@ -21,7 +21,7 @@ const flattenCategories = (categories, prefix = "") =>
     ];
   });
 
-export default function ProductCategorySelect({
+export default function CategorySelect({
   categories = [],
   disabled = false,
   value,
