@@ -16,136 +16,121 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { productService } from "@/api/product/productService";
+import { displayService } from "@/api/display/displayService";
 import useConfirm from "@/hooks/useConfirm";
+import { getCurationTypeLabel } from "./(detail)/_components/CurationDetailEditor";
 
-const productKeys = {
-  all: ["products"],
+const displayKeys = {
+  all: ["displays"],
 };
 
-const normalizeProducts = (response) => {
-  const products = Array.isArray(response)
-    ? response
-    : Array.isArray(response?.content)
-      ? response.content
-      : Array.isArray(response?.items)
-        ? response.items
-        : [];
+const getDetailSummary = (display) => {
+  const detail = display.detail;
 
-  return products.map((product) => ({
-    ...product,
-    id: product.id ?? product.code,
-    categoryName: product.categoryName ?? product.category?.name ?? "-",
-    brandName: product.brandName ?? product.brand?.name ?? "-",
-    optionCount: product.optionCount ?? product.options?.length ?? 0,
-  }));
-};
-
-const formatPrice = (value) => {
-  if (value === undefined || value === null || value === "") {
+  if (!detail) {
     return "-";
   }
+  if (Array.isArray(detail.items)) {
+    return `${detail.items.length}개 항목`;
+  }
+  if (Array.isArray(detail.productCodes)) {
+    return `${detail.productCodes.length}개 상품`;
+  }
 
-  return new Intl.NumberFormat("ko-KR", {
-    maximumFractionDigits: 0,
-  }).format(Number(value));
+  return "-";
 };
 
-export default function ProductListPage() {
+const normalizeDisplays = (response) =>
+  (Array.isArray(response) ? response : []).map((display) => ({
+    ...display,
+    typeName: getCurationTypeLabel(display.type),
+    detailSummary: getDetailSummary(display),
+  }));
+
+export default function DisplayListPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const confirm = useConfirm();
   const [rowSelectionModel, setRowSelectionModel] = useState([]);
 
-  const productsQuery = useQuery({
-    queryKey: productKeys.all,
-    queryFn: () => productService.getProducts(),
-    select: normalizeProducts,
+  const displaysQuery = useQuery({
+    queryKey: displayKeys.all,
+    queryFn: () => displayService.getDisplays(),
+    select: normalizeDisplays,
   });
 
-  const deleteProductsMutation = useMutation({
-    mutationFn: productService.deleteProducts,
+  const deleteDisplaysMutation = useMutation({
+    mutationFn: (displayIds) =>
+      Promise.all(
+        displayIds.map((displayId) => displayService.deleteDisplay(displayId)),
+      ),
     onSuccess: async () => {
       setRowSelectionModel([]);
-      await queryClient.invalidateQueries({ queryKey: productKeys.all });
+      await queryClient.invalidateQueries({ queryKey: displayKeys.all });
     },
   });
 
   const columns = useMemo(
     () => [
       {
-        field: "code",
-        headerName: "상품 코드",
-        flex: 0.8,
-        minWidth: 150,
+        field: "name",
+        headerName: "전시 명",
+        flex: 1,
+        minWidth: 180,
         renderCell: (params) => (
-          <Link color="primary" href={`/products/${params.row.code}`}>
+          <Link color="primary" href={`/display/${params.row.id}`}>
             {params.value}
           </Link>
         ),
       },
       {
-        field: "name",
-        headerName: "상품명",
-        flex: 1.2,
-        minWidth: 220,
-      },
-      {
-        field: "categoryName",
-        headerName: "카테고리",
-        flex: 0.8,
-        minWidth: 160,
-      },
-      {
-        field: "brandName",
-        headerName: "브랜드",
+        field: "typeName",
+        headerName: "타입",
         flex: 0.7,
         minWidth: 140,
       },
       {
-        field: "price",
-        headerName: "판매가",
+        field: "sortOrder",
+        headerName: "노출 순서",
         align: "right",
         headerAlign: "right",
-        minWidth: 130,
-        valueFormatter: (value) => formatPrice(value),
+        width: 120,
       },
       {
-        field: "optionCount",
-        headerName: "옵션 수",
-        align: "right",
-        headerAlign: "right",
-        width: 110,
+        field: "detailSummary",
+        headerName: "구성",
+        flex: 0.8,
+        minWidth: 140,
       },
     ],
     [],
   );
 
   const handleDeleteClick = async () => {
-    deleteProductsMutation.reset();
+    deleteDisplaysMutation.reset();
 
     const confirmed = await confirm({
-      title: "상품 삭제",
-      content: `선택한 상품 ${rowSelectionModel.length}개를 삭제하시겠습니까?`,
+      title: "전시 삭제",
+      content: `선택한 전시 ${rowSelectionModel.length}개를 삭제하시겠습니까?`,
       confirmText: "삭제",
       icon: <DeleteIcon color="error" fontSize="small" />,
       variant: "danger",
     });
 
     if (confirmed) {
-      deleteProductsMutation.mutate(rowSelectionModel);
+      deleteDisplaysMutation.mutate(rowSelectionModel);
     }
   };
 
-  const error = deleteProductsMutation.error ?? productsQuery.error;
+  const error = deleteDisplaysMutation.error ?? displaysQuery.error;
   const errorMessage =
     error instanceof Error
       ? error.message
       : error
-        ? "상품 처리 중 오류가 발생했습니다."
+        ? "전시 처리 중 오류가 발생했습니다."
         : "";
-  const isLoading = productsQuery.isLoading || productsQuery.isFetching;
-  const isDeleting = deleteProductsMutation.isPending;
+  const isLoading = displaysQuery.isLoading || displaysQuery.isFetching;
+  const isDeleting = deleteDisplaysMutation.isPending;
   const selectedCount = rowSelectionModel.length;
 
   return (
@@ -160,10 +145,10 @@ export default function ProductListPage() {
       >
         <Box>
           <Typography component="h2" variant="h5" sx={{ fontWeight: 800 }}>
-            상품 관리
+            전시 관리
           </Typography>
           <Typography color="text.secondary" variant="body2">
-            상품 목록과 기본 판매 정보를 관리합니다.
+            메인 배너, 카테고리, 상품 전시 구성을 관리합니다.
           </Typography>
         </Box>
 
@@ -186,7 +171,7 @@ export default function ProductListPage() {
           <Button
             startIcon={<AddIcon fontSize="small" />}
             variant="contained"
-            onClick={() => router.push("/products/new")}
+            onClick={() => router.push("/display/new")}
           >
             생성
           </Button>
@@ -209,7 +194,7 @@ export default function ProductListPage() {
           loading={isLoading}
           pageSizeOptions={[10, 25, 50]}
           rowSelectionModel={rowSelectionModel}
-          rows={productsQuery.data ?? []}
+          rows={displaysQuery.data ?? []}
           initialState={{
             pagination: {
               paginationModel: { page: 0, pageSize: 10 },

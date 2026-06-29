@@ -13,8 +13,10 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { brandService } from "@/api/brand/brandService";
 import { categoryService } from "@/api/category/categoryService";
 import { productService } from "@/api/product/productService";
+import BrandSelect from "@/app/(main)/products/(detail)/_components/BrandSelect";
 import CategorySelect from "@/app/(main)/products/(detail)/_components/CategorySelect";
 import ProductOptionEditor from "@/app/(main)/products/(detail)/_components/ProductOptionEditor";
 
@@ -24,6 +26,10 @@ const productKeys = {
 
 const categoryKeys = {
   all: ["categories"],
+};
+
+const brandKeys = {
+  all: ["brands"],
 };
 
 const toNumberOrNull = (value) => {
@@ -47,11 +53,17 @@ export default function ProductCreatePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [categoryId, setCategoryId] = useState("");
+  const [brandId, setBrandId] = useState("");
   const [options, setOptions] = useState([]);
 
   const categoriesQuery = useQuery({
     queryKey: categoryKeys.all,
     queryFn: () => categoryService.getCategories(),
+  });
+
+  const brandsQuery = useQuery({
+    queryKey: brandKeys.all,
+    queryFn: () => brandService.getBrands(),
   });
 
   const createProductMutation = useMutation({
@@ -77,11 +89,13 @@ export default function ProductCreatePage() {
       name: String(formData.get("name") ?? "").trim(),
       price: toNumberOrNull(formData.get("price")),
       categoryId: toNumberOrNull(categoryId),
+      brandId: toNumberOrNull(brandId),
       options: toOptionPayload(options),
     });
   };
 
-  const error = createProductMutation.error ?? categoriesQuery.error;
+  const error =
+    createProductMutation.error ?? categoriesQuery.error ?? brandsQuery.error;
   const errorMessage =
     error instanceof Error
       ? error.message
@@ -90,6 +104,7 @@ export default function ProductCreatePage() {
         : "";
   const isSubmitting = createProductMutation.isPending;
   const isLoadingCategories = categoriesQuery.isLoading;
+  const isLoadingBrands = brandsQuery.isLoading;
 
   return (
     <Stack spacing={2.5}>
@@ -147,6 +162,13 @@ export default function ProductCreatePage() {
               onChange={setCategoryId}
             />
           </Stack>
+
+          <BrandSelect
+            brands={brandsQuery.data ?? []}
+            disabled={isSubmitting || isLoadingBrands}
+            value={brandId}
+            onChange={setBrandId}
+          />
 
           <ProductOptionEditor
             disabled={isSubmitting}

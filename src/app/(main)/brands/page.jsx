@@ -16,136 +16,102 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { productService } from "@/api/product/productService";
+import { brandService } from "@/api/brand/brandService";
 import useConfirm from "@/hooks/useConfirm";
 
-const productKeys = {
-  all: ["products"],
+const brandKeys = {
+  all: ["brands"],
 };
 
-const normalizeProducts = (response) => {
-  const products = Array.isArray(response)
-    ? response
-    : Array.isArray(response?.content)
-      ? response.content
-      : Array.isArray(response?.items)
-        ? response.items
-        : [];
-
-  return products.map((product) => ({
-    ...product,
-    id: product.id ?? product.code,
-    categoryName: product.categoryName ?? product.category?.name ?? "-",
-    brandName: product.brandName ?? product.brand?.name ?? "-",
-    optionCount: product.optionCount ?? product.options?.length ?? 0,
+const normalizeBrands = (response) =>
+  (Array.isArray(response) ? response : []).map((brand) => ({
+    ...brand,
+    introduce: brand.introduce || "-",
+    logoName: brand.logo?.originalName ?? "-",
+    imageName: brand.mainImage?.originalName ?? "-",
   }));
-};
 
-const formatPrice = (value) => {
-  if (value === undefined || value === null || value === "") {
-    return "-";
-  }
-
-  return new Intl.NumberFormat("ko-KR", {
-    maximumFractionDigits: 0,
-  }).format(Number(value));
-};
-
-export default function ProductListPage() {
+export default function BrandListPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const confirm = useConfirm();
   const [rowSelectionModel, setRowSelectionModel] = useState([]);
 
-  const productsQuery = useQuery({
-    queryKey: productKeys.all,
-    queryFn: () => productService.getProducts(),
-    select: normalizeProducts,
+  const brandsQuery = useQuery({
+    queryKey: brandKeys.all,
+    queryFn: () => brandService.getBrands(),
+    select: normalizeBrands,
   });
 
-  const deleteProductsMutation = useMutation({
-    mutationFn: productService.deleteProducts,
+  const deleteBrandsMutation = useMutation({
+    mutationFn: (brandIds) =>
+      Promise.all(brandIds.map((brandId) => brandService.deleteBrand(brandId))),
     onSuccess: async () => {
       setRowSelectionModel([]);
-      await queryClient.invalidateQueries({ queryKey: productKeys.all });
+      await queryClient.invalidateQueries({ queryKey: brandKeys.all });
     },
   });
 
   const columns = useMemo(
     () => [
       {
-        field: "code",
-        headerName: "상품 코드",
+        field: "name",
+        headerName: "브랜드 명",
         flex: 0.8,
-        minWidth: 150,
+        minWidth: 180,
         renderCell: (params) => (
-          <Link color="primary" href={`/products/${params.row.code}`}>
+          <Link color="primary" href={`/brands/${params.row.id}`}>
             {params.value}
           </Link>
         ),
       },
       {
-        field: "name",
-        headerName: "상품명",
+        field: "introduce",
+        headerName: "소개",
         flex: 1.2,
-        minWidth: 220,
+        minWidth: 260,
       },
       {
-        field: "categoryName",
-        headerName: "카테고리",
+        field: "logoName",
+        headerName: "로고",
         flex: 0.8,
-        minWidth: 160,
+        minWidth: 180,
       },
       {
-        field: "brandName",
-        headerName: "브랜드",
-        flex: 0.7,
-        minWidth: 140,
-      },
-      {
-        field: "price",
-        headerName: "판매가",
-        align: "right",
-        headerAlign: "right",
-        minWidth: 130,
-        valueFormatter: (value) => formatPrice(value),
-      },
-      {
-        field: "optionCount",
-        headerName: "옵션 수",
-        align: "right",
-        headerAlign: "right",
-        width: 110,
+        field: "imageName",
+        headerName: "대표 이미지",
+        flex: 1,
+        minWidth: 220,
       },
     ],
     [],
   );
 
   const handleDeleteClick = async () => {
-    deleteProductsMutation.reset();
+    deleteBrandsMutation.reset();
 
     const confirmed = await confirm({
-      title: "상품 삭제",
-      content: `선택한 상품 ${rowSelectionModel.length}개를 삭제하시겠습니까?`,
+      title: "브랜드 삭제",
+      content: `선택한 브랜드 ${rowSelectionModel.length}개를 삭제하시겠습니까?`,
       confirmText: "삭제",
       icon: <DeleteIcon color="error" fontSize="small" />,
       variant: "danger",
     });
 
     if (confirmed) {
-      deleteProductsMutation.mutate(rowSelectionModel);
+      deleteBrandsMutation.mutate(rowSelectionModel);
     }
   };
 
-  const error = deleteProductsMutation.error ?? productsQuery.error;
+  const error = deleteBrandsMutation.error ?? brandsQuery.error;
   const errorMessage =
     error instanceof Error
       ? error.message
       : error
-        ? "상품 처리 중 오류가 발생했습니다."
+        ? "브랜드 처리 중 오류가 발생했습니다."
         : "";
-  const isLoading = productsQuery.isLoading || productsQuery.isFetching;
-  const isDeleting = deleteProductsMutation.isPending;
+  const isLoading = brandsQuery.isLoading || brandsQuery.isFetching;
+  const isDeleting = deleteBrandsMutation.isPending;
   const selectedCount = rowSelectionModel.length;
 
   return (
@@ -160,10 +126,10 @@ export default function ProductListPage() {
       >
         <Box>
           <Typography component="h2" variant="h5" sx={{ fontWeight: 800 }}>
-            상품 관리
+            브랜드 관리
           </Typography>
           <Typography color="text.secondary" variant="body2">
-            상품 목록과 기본 판매 정보를 관리합니다.
+            상품에 연결할 브랜드와 대표 이미지를 관리합니다.
           </Typography>
         </Box>
 
@@ -186,7 +152,7 @@ export default function ProductListPage() {
           <Button
             startIcon={<AddIcon fontSize="small" />}
             variant="contained"
-            onClick={() => router.push("/products/new")}
+            onClick={() => router.push("/brands/new")}
           >
             생성
           </Button>
@@ -209,7 +175,7 @@ export default function ProductListPage() {
           loading={isLoading}
           pageSizeOptions={[10, 25, 50]}
           rowSelectionModel={rowSelectionModel}
-          rows={productsQuery.data ?? []}
+          rows={brandsQuery.data ?? []}
           initialState={{
             pagination: {
               paginationModel: { page: 0, pageSize: 10 },

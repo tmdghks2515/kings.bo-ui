@@ -15,8 +15,10 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { brandService } from "@/api/brand/brandService";
 import { categoryService } from "@/api/category/categoryService";
 import { productService } from "@/api/product/productService";
+import BrandSelect from "@/app/(main)/products/(detail)/_components/BrandSelect";
 import CategorySelect from "@/app/(main)/products/(detail)/_components/CategorySelect";
 import ProductImageEditor from "@/app/(main)/products/(detail)/_components/ProductImageEditor";
 import ProductOptionEditor from "@/app/(main)/products/(detail)/_components/ProductOptionEditor";
@@ -28,6 +30,10 @@ const productKeys = {
 
 const categoryKeys = {
   all: ["categories"],
+};
+
+const brandKeys = {
+  all: ["brands"],
 };
 
 const toNumberOrNull = (value) => {
@@ -93,6 +99,7 @@ export default function ProductDetailPage() {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [brandId, setBrandId] = useState("");
   const [options, setOptions] = useState([]);
   const [images, setImages] = useState([]);
   const [detailImages, setDetailImages] = useState([]);
@@ -106,6 +113,11 @@ export default function ProductDetailPage() {
   const categoriesQuery = useQuery({
     queryKey: categoryKeys.all,
     queryFn: () => categoryService.getCategories(),
+  });
+
+  const brandsQuery = useQuery({
+    queryKey: brandKeys.all,
+    queryFn: () => brandService.getBrands(),
   });
 
   const updateProductMutation = useMutation({
@@ -134,6 +146,7 @@ export default function ProductDetailPage() {
     setName(productQuery.data.name ?? "");
     setPrice(productQuery.data.price ?? "");
     setCategoryId(productQuery.data.categoryId ?? "");
+    setBrandId(productQuery.data.brandId ?? "");
     setImages(toImageRows(productQuery.data.images ?? []));
     setDetailImages(toDetailImageRows(productQuery.data.detailImages ?? []));
   }, [productQuery.data]);
@@ -147,6 +160,7 @@ export default function ProductDetailPage() {
     name: name.trim(),
     price: toNumberOrNull(price),
     categoryId: toNumberOrNull(categoryId),
+    brandId: toNumberOrNull(brandId),
     options: toOptionPayload(options),
     images: toImagePayload(images),
     detailImages: toDetailImagePayload(detailImages),
@@ -164,7 +178,10 @@ export default function ProductDetailPage() {
   };
 
   const error =
-    updateProductMutation.error ?? productQuery.error ?? categoriesQuery.error;
+    updateProductMutation.error ??
+    productQuery.error ??
+    categoriesQuery.error ??
+    brandsQuery.error;
   const errorMessage =
     error instanceof Error
       ? error.message
@@ -173,6 +190,7 @@ export default function ProductDetailPage() {
         : "";
   const isLoading = productQuery.isLoading;
   const isLoadingCategories = categoriesQuery.isLoading;
+  const isLoadingBrands = brandsQuery.isLoading;
   const isSubmitting = updateProductMutation.isPending;
 
   return (
@@ -241,6 +259,13 @@ export default function ProductDetailPage() {
                   onChange={setCategoryId}
                 />
               </Stack>
+
+              <BrandSelect
+                brands={brandsQuery.data ?? []}
+                disabled={isLoading || isSubmitting || isLoadingBrands}
+                value={brandId}
+                onChange={setBrandId}
+              />
 
               <ProductOptionEditor
                 disabled={isLoading || isSubmitting}

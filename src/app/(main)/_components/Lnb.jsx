@@ -6,6 +6,7 @@ import CategoryIcon from "@mui/icons-material/Category";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import GroupsIcon from "@mui/icons-material/Groups";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
+import StorefrontIcon from "@mui/icons-material/Storefront";
 import WebIcon from "@mui/icons-material/Web";
 import {
   Box,
@@ -31,6 +32,11 @@ const menuItems = [
     label: "카테고리 관리",
     href: "/categories",
     icon: <CategoryIcon fontSize="small" />,
+  },
+  {
+    label: "브랜드 관리",
+    href: "/brands",
+    icon: <StorefrontIcon fontSize="small" />,
   },
   {
     label: "상품 관리",

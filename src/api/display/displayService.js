@@ -2,22 +2,22 @@ import { httpClient } from "../httpClient";
 
 export const displayService = {
   getDisplays(params) {
-    return httpClient.get("/api/displays", { params });
+    return httpClient.get("/api/curations", { params });
   },
 
   getDisplay(displayId) {
-    return httpClient.get(`/api/displays/${displayId}`);
+    return httpClient.get(`/api/curations/${displayId}`);
   },
 
   createDisplay(payload) {
-    return httpClient.post("/api/displays", payload);
+    return httpClient.post("/api/curations", payload);
   },
 
   updateDisplay(displayId, payload) {
-    return httpClient.put(`/api/displays/${displayId}`, payload);
+    return httpClient.put(`/api/curations/${displayId}`, payload);
   },
 
   deleteDisplay(displayId) {
-    return httpClient.delete(`/api/displays/${displayId}`);
+    return httpClient.delete(`/api/curations/${displayId}`);
   },
 };
