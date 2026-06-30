@@ -23,12 +23,20 @@ const brandKeys = {
   all: ["brands"],
 };
 
+const getImageName = (image, storageKey) => {
+  if (typeof image === "string") {
+    return image;
+  }
+
+  return image?.originalName ?? storageKey ?? "-";
+};
+
 const normalizeBrands = (response) =>
   (Array.isArray(response) ? response : []).map((brand) => ({
     ...brand,
     introduce: brand.introduce || "-",
-    logoName: brand.logo?.originalName ?? "-",
-    imageName: brand.mainImage?.originalName ?? "-",
+    logoName: getImageName(brand.logo, brand.logoStorageKey),
+    imageName: getImageName(brand.mainImage, brand.mainImageStorageKey),
   }));
 
 export default function BrandListPage() {

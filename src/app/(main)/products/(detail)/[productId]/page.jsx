@@ -52,25 +52,29 @@ const toOptionRows = (options = []) =>
     type: option.type ?? "ETC",
   }));
 
+const getStorageKey = (image) =>
+  typeof image === "string" ? image : image?.storageKey;
+
+const getImageValue = (image, fieldName) =>
+  typeof image === "string" ? undefined : image?.[fieldName];
+
 const toImageRows = (images = []) =>
   images.map((image) => ({
-    fileResourceId: image.fileResourceId,
-    originalName: image.originalName,
-    storageKey: image.storageKey,
-    contentType: image.contentType,
-    extension: image.extension,
-    sizeBytes: image.sizeBytes,
-    main: image.main,
+    originalName: getImageValue(image, "originalName") ?? getStorageKey(image),
+    storageKey: getStorageKey(image),
+    contentType: getImageValue(image, "contentType"),
+    extension: getImageValue(image, "extension"),
+    sizeBytes: getImageValue(image, "sizeBytes"),
+    main: Boolean(getImageValue(image, "main")),
   }));
 
 const toDetailImageRows = (images = []) =>
   images.map((image) => ({
-    fileResourceId: image.fileResourceId,
-    originalName: image.originalName,
-    storageKey: image.storageKey,
-    contentType: image.contentType,
-    extension: image.extension,
-    sizeBytes: image.sizeBytes,
+    originalName: getImageValue(image, "originalName") ?? getStorageKey(image),
+    storageKey: getStorageKey(image),
+    contentType: getImageValue(image, "contentType"),
+    extension: getImageValue(image, "extension"),
+    sizeBytes: getImageValue(image, "sizeBytes"),
   }));
 
 const toOptionPayload = (options) =>
@@ -84,12 +88,12 @@ const toOptionPayload = (options) =>
 
 const toImagePayload = (images) =>
   images.map((image) => ({
-    fileResourceId: image.fileResourceId,
+    storageKey: image.storageKey,
     main: Boolean(image.main),
   }));
 
 const toDetailImagePayload = (images) =>
-  images.map((image) => image.fileResourceId);
+  images.map((image) => image.storageKey);
 
 export default function ProductDetailPage() {
   const router = useRouter();

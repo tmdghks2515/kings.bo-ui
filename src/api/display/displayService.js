@@ -2,7 +2,11 @@ import { httpClient } from "../httpClient";
 
 export const displayService = {
   getDisplays(params) {
-    return httpClient.get("/api/curations", { params });
+    return httpClient.get("/api/curation-pages", { params });
+  },
+
+  getCurationPage(curationPageId) {
+    return httpClient.get(`/api/curation-pages/${curationPageId}`);
   },
 
   getDisplay(displayId) {
@@ -15,6 +19,10 @@ export const displayService = {
 
   updateDisplay(displayId, payload) {
     return httpClient.put(`/api/curations/${displayId}`, payload);
+  },
+
+  updateCurationSortOrders(payload) {
+    return httpClient.put("/api/curations/sort-orders", payload);
   },
 
   deleteDisplay(displayId) {

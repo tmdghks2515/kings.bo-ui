@@ -1,13 +1,22 @@
 "use client";
 
+import { useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
+import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ImageIcon from "@mui/icons-material/Image";
 import {
+  Alert,
   Box,
   Button,
+  CircularProgress,
   FormControl,
   IconButton,
   InputLabel,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
   MenuItem,
   Paper,
   Select,
@@ -15,6 +24,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { fileService } from "@/api/file/fileService";
 
 const DETAIL_TYPE_BY_CURATION_TYPE = {
   MAIN_BANNER: "MainBannerDetail",
@@ -50,7 +60,7 @@ const createLink = (type = "ProductDetailLink") => {
 
 const createImageLinkRow = (withText = false) => ({
   id: crypto.randomUUID(),
-  imageUrl: "",
+  imageStorageKey: "",
   link: createLink(),
   ...(withText ? { title: "", description: "" } : {}),
 });
@@ -63,7 +73,9 @@ const createProductCodeRow = (productCode = "") => ({
 const normalizeImageLinkRows = (items = [], withText = false) =>
   (Array.isArray(items) ? items : []).map((item) => ({
     id: crypto.randomUUID(),
-    imageUrl: item.imageUrl ?? "",
+    imageStorageKey: item.imageStorageKey ?? item.imageUrl ?? "",
+    originalName:
+      item.originalName ?? item.imageStorageKey ?? item.imageUrl ?? "",
     link: item.link ?? createLink(),
     ...(withText
       ? {
@@ -163,7 +175,7 @@ export const toCurationDetailPayload = (type, state) => {
     type: detailType,
     items: state.items
       .map((row) => ({
-        imageUrl: row.imageUrl.trim(),
+        imageStorageKey: row.imageStorageKey.trim(),
         link: cleanLink(row.link),
         ...(type !== "CATEGORIES"
           ? {
@@ -172,7 +184,7 @@ export const toCurationDetailPayload = (type, state) => {
             }
           : {}),
       }))
-      .filter((row) => row.imageUrl),
+      .filter((row) => row.imageStorageKey),
   };
 };
 
@@ -251,10 +263,10 @@ export default function CurationDetailEditor({
 export function CurationTypeSelect({ disabled = false, value, onChange }) {
   return (
     <FormControl fullWidth>
-      <InputLabel id="curation-type-label">전시 타입</InputLabel>
+      <InputLabel id="curation-type-label">큐레이션 타입</InputLabel>
       <Select
         disabled={disabled}
-        label="전시 타입"
+        label="큐레이션 타입"
         labelId="curation-type-label"
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -289,13 +301,15 @@ function ImageLinkRows({
     <Stack spacing={1.5}>
       <Stack alignItems="center" direction="row" justifyContent="space-between">
         <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
-          전시 항목
+          큐레이션 항목
         </Typography>
         <Button
           disabled={disabled}
           startIcon={<AddIcon fontSize="small" />}
           variant="outlined"
-          onClick={() => onChange([...rows, createImageLinkRow(type !== "CATEGORIES")])}
+          onClick={() =>
+            onChange([...rows, createImageLinkRow(type !== "CATEGORIES")])
+          }
         >
           항목 추가
         </Button>
@@ -308,14 +322,20 @@ function ImageLinkRows({
           sx={{ border: 1, borderColor: "divider", p: 2 }}
         >
           <Stack spacing={2}>
-            <Stack alignItems="center" direction="row" justifyContent="space-between">
+            <Stack
+              alignItems="center"
+              direction="row"
+              justifyContent="space-between"
+            >
               <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                 항목 {index + 1}
               </Typography>
               <IconButton
                 color="error"
                 disabled={disabled || rows.length <= 1}
-                onClick={() => onChange(rows.filter((item) => item.id !== row.id))}
+                onClick={() =>
+                  onChange(rows.filter((item) => item.id !== row.id))
+                }
               >
                 <DeleteIcon fontSize="small" />
               </IconButton>
@@ -352,15 +372,13 @@ function ImageLinkRows({
               </Stack>
             ) : null}
 
-            <TextField
-              required
+            <ImageUploadInput
               disabled={disabled}
-              label="이미지 URL"
-              value={row.imageUrl}
-              onChange={(event) =>
+              value={row}
+              onChange={(image) =>
                 handleRowChange(row.id, (item) => ({
                   ...item,
-                  imageUrl: event.target.value,
+                  ...image,
                 }))
               }
             />
@@ -378,6 +396,117 @@ function ImageLinkRows({
           </Stack>
         </Paper>
       ))}
+    </Stack>
+  );
+}
+
+function ImageUploadInput({ disabled, value, onChange }) {
+  const inputRef = useRef(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const imageStorageKey = value.imageStorageKey ?? "";
+  const imageName = value.originalName || imageStorageKey;
+
+  const handleUpload = async (file) => {
+    if (!file) {
+      return;
+    }
+
+    setErrorMessage("");
+    setIsUploading(true);
+
+    try {
+      const uploadedFile = await fileService.uploadFile(file);
+      if (!uploadedFile.storageKey) {
+        throw new Error("업로드 응답에 storageKey가 없습니다.");
+      }
+
+      onChange({
+        imageStorageKey: uploadedFile.storageKey,
+        originalName:
+          uploadedFile.originalName ?? file.name ?? uploadedFile.storageKey,
+      });
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "이미지 업로드 중 오류가 발생했습니다.",
+      );
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <Stack spacing={1}>
+      {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
+
+      <Stack
+        alignItems={{ xs: "stretch", sm: "center" }}
+        direction={{ xs: "column", sm: "row" }}
+        justifyContent="space-between"
+        spacing={1}
+      >
+        <Box>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+            이미지
+          </Typography>
+          <Typography color="text.secondary" variant="body2">
+            큐레이션 영역에 노출할 이미지를 등록합니다.
+          </Typography>
+        </Box>
+
+        <input
+          ref={inputRef}
+          hidden
+          accept="image/*"
+          type="file"
+          onChange={(event) => {
+            handleUpload(event.target.files?.[0]);
+            event.target.value = "";
+          }}
+        />
+        <Button
+          disabled={disabled || isUploading}
+          startIcon={
+            isUploading ? (
+              <CircularProgress color="inherit" size={16} />
+            ) : (
+              <AddPhotoAlternateIcon fontSize="small" />
+            )
+          }
+          variant="outlined"
+          onClick={() => inputRef.current?.click()}
+        >
+          이미지 선택
+        </Button>
+      </Stack>
+
+      {imageStorageKey ? (
+        <List disablePadding>
+          <ListItem divider>
+            <ListItemIcon sx={{ minWidth: 40 }}>
+              <ImageIcon color="action" />
+            </ListItemIcon>
+            <ListItemText primary={imageName} secondary={imageStorageKey} />
+          </ListItem>
+        </List>
+      ) : (
+        <Box
+          sx={{
+            border: 1,
+            borderColor: "divider",
+            borderRadius: 1,
+            px: 2,
+            py: 3,
+            textAlign: "center",
+          }}
+        >
+          <Typography color="text.secondary" variant="body2">
+            등록된 이미지가 없습니다.
+          </Typography>
+        </Box>
+      )}
     </Stack>
   );
 }

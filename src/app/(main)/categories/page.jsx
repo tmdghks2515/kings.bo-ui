@@ -139,7 +139,7 @@ export default function CategoryListPage() {
             카테고리 관리
           </Typography>
           <Typography color="text.secondary" variant="body2">
-            전시 카테고리 구조를 관리합니다.
+            큐레이션 카테고리 구조를 관리합니다.
           </Typography>
         </Box>
 

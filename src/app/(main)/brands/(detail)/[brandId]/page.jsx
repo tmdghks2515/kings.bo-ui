@@ -21,6 +21,18 @@ const brandKeys = {
   detail: (brandId) => ["brands", brandId],
 };
 
+const toImage = (fileResource, storageKey) => {
+  if (typeof fileResource === "string") {
+    return { storageKey: fileResource, originalName: fileResource };
+  }
+
+  if (fileResource) {
+    return fileResource;
+  }
+
+  return storageKey ? { storageKey, originalName: storageKey } : null;
+};
+
 export default function BrandDetailPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -54,8 +66,10 @@ export default function BrandDetailPage() {
 
     setName(brandQuery.data.name ?? "");
     setIntroduce(brandQuery.data.introduce ?? "");
-    setLogo(brandQuery.data.logo ?? null);
-    setMainImage(brandQuery.data.mainImage ?? null);
+    setLogo(toImage(brandQuery.data.logo, brandQuery.data.logoStorageKey));
+    setMainImage(
+      toImage(brandQuery.data.mainImage, brandQuery.data.mainImageStorageKey),
+    );
   }, [brandQuery.data]);
 
   const handleSubmit = (event) => {
@@ -65,8 +79,8 @@ export default function BrandDetailPage() {
     updateBrandMutation.mutate({
       name: name.trim(),
       introduce: introduce.trim() || null,
-      logoResourceId: logo?.id ?? null,
-      mainImageResourceId: mainImage?.id ?? null,
+      logoStorageKey: logo?.storageKey ?? null,
+      mainImageStorageKey: mainImage?.storageKey ?? null,
     });
   };
 

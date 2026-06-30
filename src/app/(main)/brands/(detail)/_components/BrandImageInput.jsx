@@ -19,14 +19,20 @@ import {
 } from "@mui/material";
 import { fileService } from "@/api/file/fileService";
 
-const toImage = (fileResource) => ({
-  id: fileResource.id,
-  originalName: fileResource.originalName,
-  storageKey: fileResource.storageKey,
-  contentType: fileResource.contentType,
-  extension: fileResource.extension,
-  sizeBytes: fileResource.sizeBytes,
-});
+const toImage = (fileResource, fallbackFile) => {
+  if (!fileResource.storageKey) {
+    throw new Error("업로드 응답에 storageKey가 없습니다.");
+  }
+
+  return {
+    storageKey: fileResource.storageKey,
+    originalName:
+      fileResource.originalName ?? fallbackFile?.name ?? fileResource.storageKey,
+    contentType: fileResource.contentType ?? fallbackFile?.type ?? "",
+    extension: fileResource.extension ?? "",
+    sizeBytes: fileResource.sizeBytes ?? fallbackFile?.size ?? 0,
+  };
+};
 
 const formatFileSize = (sizeBytes) => {
   if (!sizeBytes) {
@@ -61,7 +67,7 @@ export default function BrandImageInput({
 
     try {
       const uploadedFile = await fileService.uploadFile(file);
-      onChange(toImage(uploadedFile));
+      onChange(toImage(uploadedFile, file));
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -137,7 +143,7 @@ export default function BrandImageInput({
               <ImageIcon color="action" />
             </ListItemIcon>
             <ListItemText
-              primary={image.originalName}
+              primary={image.originalName ?? image.storageKey}
               secondary={formatFileSize(image.sizeBytes)}
             />
           </ListItem>

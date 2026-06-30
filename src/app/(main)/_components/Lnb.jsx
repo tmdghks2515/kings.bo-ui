@@ -44,8 +44,8 @@ const menuItems = [
     icon: <Inventory2Icon fontSize="small" />,
   },
   {
-    label: "전시 관리",
-    href: "/display",
+    label: "전시 페이지 관리",
+    href: "/curation/page",
     icon: <WebIcon fontSize="small" />,
   },
   {

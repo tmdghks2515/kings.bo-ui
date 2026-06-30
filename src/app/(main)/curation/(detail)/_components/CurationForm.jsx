@@ -21,17 +21,34 @@ import CurationDetailEditor, {
   CurationTypeSelect,
   createInitialDetailState,
   toCurationDetailPayload,
-} from "../_components/CurationDetailEditor";
+  toDetailState,
+} from "./CurationDetailEditor";
 
-const displayKeys = {
+const curationKeys = {
   all: ["displays"],
+  detail: (curationId) => ["curations", curationId],
+  pageDetail: (curationPageId) => ["curation-pages", curationPageId],
 };
 
-export default function DisplayCreatePage() {
+export default function CurationForm({ curationId, curationPageId }) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const returnPath = curationPageId
+    ? `/curation/page/${curationPageId}`
+    : "/curation/page";
+  const isEdit = Boolean(curationId);
   const [type, setType] = useState("MAIN_BANNER");
-  const [detail, setDetail] = useState(() => createInitialDetailState("MAIN_BANNER"));
+  const [name, setName] = useState("");
+  const [sortOrder, setSortOrder] = useState(0);
+  const [detail, setDetail] = useState(() =>
+    createInitialDetailState("MAIN_BANNER"),
+  );
+
+  const curationQuery = useQuery({
+    queryKey: curationKeys.detail(curationId),
+    queryFn: () => displayService.getDisplay(curationId),
+    enabled: isEdit,
+  });
 
   const productsQuery = useQuery({
     queryKey: ["products"],
@@ -46,34 +63,62 @@ export default function DisplayCreatePage() {
     queryFn: () => brandService.getBrands(),
   });
 
-  const createDisplayMutation = useMutation({
-    mutationFn: displayService.createDisplay,
+  const saveCurationMutation = useMutation({
+    mutationFn: (payload) =>
+      isEdit
+        ? displayService.updateDisplay(curationId, payload)
+        : displayService.createDisplay(payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: displayKeys.all });
-      router.push("/display");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: curationKeys.all }),
+        isEdit
+          ? queryClient.invalidateQueries({
+              queryKey: curationKeys.detail(curationId),
+            })
+          : Promise.resolve(),
+        curationPageId
+          ? queryClient.invalidateQueries({
+              queryKey: curationKeys.pageDetail(curationPageId),
+            })
+          : Promise.resolve(),
+      ]);
+      router.push(returnPath);
     },
   });
 
   useEffect(() => {
-    setDetail(createInitialDetailState(type));
-  }, [type]);
+    if (!curationQuery.data) {
+      return;
+    }
+
+    const nextType = curationQuery.data.type ?? "MAIN_BANNER";
+    setType(nextType);
+    setName(curationQuery.data.name ?? "");
+    setSortOrder(curationQuery.data.sortOrder ?? 0);
+    setDetail(toDetailState(nextType, curationQuery.data.detail));
+  }, [curationQuery.data]);
+
+  const handleTypeChange = (nextType) => {
+    setType(nextType);
+    setDetail(createInitialDetailState(nextType));
+  };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    createDisplayMutation.reset();
+    saveCurationMutation.reset();
 
-    const formData = new FormData(event.currentTarget);
-
-    createDisplayMutation.mutate({
+    saveCurationMutation.mutate({
+      curationPageType: curationQuery.data?.curationPageType ?? "MAIN",
       type,
-      name: String(formData.get("name") ?? "").trim(),
-      sortOrder: Number(formData.get("sortOrder") ?? 0),
+      name: name.trim(),
+      sortOrder: Number(sortOrder ?? 0),
       detail: toCurationDetailPayload(type, detail),
     });
   };
 
   const error =
-    createDisplayMutation.error ??
+    saveCurationMutation.error ??
+    curationQuery.error ??
     productsQuery.error ??
     categoriesQuery.error ??
     brandsQuery.error;
@@ -81,9 +126,10 @@ export default function DisplayCreatePage() {
     error instanceof Error
       ? error.message
       : error
-        ? "전시 등록 중 오류가 발생했습니다."
+        ? "큐레이션 처리 중 오류가 발생했습니다."
         : "";
-  const isSubmitting = createDisplayMutation.isPending;
+  const isSubmitting = saveCurationMutation.isPending;
+  const isLoading = curationQuery.isLoading;
   const isLoadingOptions =
     productsQuery.isLoading || categoriesQuery.isLoading || brandsQuery.isLoading;
 
@@ -91,10 +137,12 @@ export default function DisplayCreatePage() {
     <Stack spacing={2.5}>
       <Box>
         <Typography component="h2" variant="h5" sx={{ fontWeight: 800 }}>
-          전시 생성
+          {isEdit ? "큐레이션 상세" : "큐레이션 생성"}
         </Typography>
         <Typography color="text.secondary" variant="body2">
-          신규 전시 영역과 구성 항목을 입력합니다.
+          {isEdit
+            ? "큐레이션 영역과 구성 항목을 수정합니다."
+            : "신규 큐레이션 영역과 구성 항목을 입력합니다."}
         </Typography>
       </Box>
 
@@ -110,34 +158,35 @@ export default function DisplayCreatePage() {
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
             <TextField
               required
-              disabled={isSubmitting}
+              disabled={isLoading || isSubmitting}
               fullWidth
-              label="전시 명"
-              name="name"
-              placeholder="전시 명을 입력하세요"
+              label="큐레이션 명"
+              placeholder="큐레이션 명을 입력하세요"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
             />
             <TextField
               required
-              disabled={isSubmitting}
+              disabled={isLoading || isSubmitting}
               fullWidth
               inputProps={{ min: 0 }}
               label="노출 순서"
-              name="sortOrder"
               type="number"
-              defaultValue={0}
+              value={sortOrder}
+              onChange={(event) => setSortOrder(event.target.value)}
             />
           </Stack>
 
           <CurationTypeSelect
-            disabled={isSubmitting}
+            disabled={isLoading || isSubmitting}
             value={type}
-            onChange={setType}
+            onChange={handleTypeChange}
           />
 
           <CurationDetailEditor
             brands={brandsQuery.data ?? []}
             categories={categoriesQuery.data ?? []}
-            disabled={isSubmitting || isLoadingOptions}
+            disabled={isLoading || isSubmitting || isLoadingOptions}
             products={productsQuery.data ?? []}
             type={type}
             value={detail}
@@ -148,7 +197,7 @@ export default function DisplayCreatePage() {
             <Button
               color="inherit"
               disabled={isSubmitting}
-              onClick={() => router.push("/display")}
+              onClick={() => router.push(returnPath)}
             >
               취소
             </Button>

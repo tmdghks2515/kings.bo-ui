@@ -44,8 +44,8 @@ export default function BrandCreatePage() {
     createBrandMutation.mutate({
       name: String(formData.get("name") ?? "").trim(),
       introduce: introduce || null,
-      logoResourceId: logo?.id ?? null,
-      mainImageResourceId: mainImage?.id ?? null,
+      logoStorageKey: logo?.storageKey ?? null,
+      mainImageStorageKey: mainImage?.storageKey ?? null,
     });
   };
 

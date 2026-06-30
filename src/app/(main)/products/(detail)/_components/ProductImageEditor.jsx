@@ -22,14 +22,20 @@ import {
 } from "@mui/material";
 import { fileService } from "@/api/file/fileService";
 
-const toUploadedImage = (fileResource) => ({
-  fileResourceId: fileResource.id,
-  originalName: fileResource.originalName,
-  storageKey: fileResource.storageKey,
-  contentType: fileResource.contentType,
-  extension: fileResource.extension,
-  sizeBytes: fileResource.sizeBytes,
-});
+const toUploadedImage = (fileResource, fallbackFile) => {
+  if (!fileResource.storageKey) {
+    throw new Error("업로드 응답에 storageKey가 없습니다.");
+  }
+
+  return {
+    storageKey: fileResource.storageKey,
+    originalName:
+      fileResource.originalName ?? fallbackFile?.name ?? fileResource.storageKey,
+    contentType: fileResource.contentType ?? fallbackFile?.type ?? "",
+    extension: fileResource.extension ?? "",
+    sizeBytes: fileResource.sizeBytes ?? fallbackFile?.size ?? 0,
+  };
+};
 
 const formatFileSize = (sizeBytes) => {
   if (!sizeBytes) {
@@ -67,7 +73,7 @@ export default function ProductImageEditor({
       const uploadedFiles = [];
       for (const file of files) {
         const uploadedFile = await fileService.uploadFile(file);
-        uploadedFiles.push(toUploadedImage(uploadedFile));
+        uploadedFiles.push(toUploadedImage(uploadedFile, file));
       }
 
       if (target === "images") {
@@ -93,9 +99,9 @@ export default function ProductImageEditor({
     }
   };
 
-  const handleRemoveImage = (fileResourceId) => {
+  const handleRemoveImage = (storageKey) => {
     const nextImages = images.filter(
-      (image) => image.fileResourceId !== fileResourceId,
+      (image) => image.storageKey !== storageKey,
     );
 
     if (nextImages.length > 0 && !nextImages.some((image) => image.main)) {
@@ -108,18 +114,18 @@ export default function ProductImageEditor({
     onImagesChange(nextImages);
   };
 
-  const handleMainImageChange = (fileResourceId) => {
+  const handleMainImageChange = (storageKey) => {
     onImagesChange(
       images.map((image) => ({
         ...image,
-        main: image.fileResourceId === fileResourceId,
+        main: image.storageKey === storageKey,
       })),
     );
   };
 
-  const handleRemoveDetailImage = (fileResourceId) => {
+  const handleRemoveDetailImage = (storageKey) => {
     onDetailImagesChange(
-      detailImages.filter((image) => image.fileResourceId !== fileResourceId),
+      detailImages.filter((image) => image.storageKey !== storageKey),
     );
   };
 
@@ -180,14 +186,14 @@ export default function ProductImageEditor({
             <List disablePadding>
               {images.map((image) => (
                 <ListItem
-                  key={image.fileResourceId}
+                  key={image.storageKey}
                   divider
                   secondaryAction={
                     <IconButton
                       edge="end"
                       color="error"
                       disabled={disabled || Boolean(uploadTarget)}
-                      onClick={() => handleRemoveImage(image.fileResourceId)}
+                      onClick={() => handleRemoveImage(image.storageKey)}
                     >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
@@ -196,7 +202,7 @@ export default function ProductImageEditor({
                   <Radio
                     checked={image.main}
                     disabled={disabled || Boolean(uploadTarget)}
-                    onChange={() => handleMainImageChange(image.fileResourceId)}
+                    onChange={() => handleMainImageChange(image.storageKey)}
                   />
                   <ListItemIcon sx={{ minWidth: 40 }}>
                     <ImageIcon color="action" />
@@ -204,7 +210,7 @@ export default function ProductImageEditor({
                   <ListItemText
                     primary={
                       <Stack alignItems="center" direction="row" spacing={1}>
-                        <span>{image.originalName}</span>
+                        <span>{image.originalName ?? image.storageKey}</span>
                         {image.main ? (
                           <Chip color="primary" label="대표" size="small" />
                         ) : null}
@@ -272,7 +278,7 @@ export default function ProductImageEditor({
             <List disablePadding>
               {detailImages.map((image, index) => (
                 <ListItem
-                  key={image.fileResourceId}
+                  key={image.storageKey}
                   divider
                   secondaryAction={
                     <IconButton
@@ -280,7 +286,7 @@ export default function ProductImageEditor({
                       color="error"
                       disabled={disabled || Boolean(uploadTarget)}
                       onClick={() =>
-                        handleRemoveDetailImage(image.fileResourceId)
+                        handleRemoveDetailImage(image.storageKey)
                       }
                     >
                       <DeleteIcon fontSize="small" />
@@ -291,7 +297,7 @@ export default function ProductImageEditor({
                     <ImageIcon color="action" />
                   </ListItemIcon>
                   <ListItemText
-                    primary={`${index + 1}. ${image.originalName}`}
+                    primary={`${index + 1}. ${image.originalName ?? image.storageKey}`}
                     secondary={formatFileSize(image.sizeBytes)}
                   />
                 </ListItem>
