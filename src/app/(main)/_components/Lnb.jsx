@@ -6,6 +6,7 @@ import CategoryIcon from "@mui/icons-material/Category";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import GroupsIcon from "@mui/icons-material/Groups";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import WebIcon from "@mui/icons-material/Web";
 import {
@@ -47,6 +48,11 @@ const menuItems = [
     label: "전시 페이지 관리",
     href: "/curation/page",
     icon: <WebIcon fontSize="small" />,
+  },
+  {
+    label: "사용자 관리",
+    href: "/users",
+    icon: <ManageAccountsIcon fontSize="small" />,
   },
   {
     label: "회원 관리",
