@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import CategoryIcon from "@mui/icons-material/Category";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import GroupsIcon from "@mui/icons-material/Groups";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import StorefrontIcon from "@mui/icons-material/Storefront";
@@ -54,11 +53,6 @@ const menuItems = [
     href: "/users",
     icon: <ManageAccountsIcon fontSize="small" />,
   },
-  {
-    label: "회원 관리",
-    href: "/members",
-    icon: <GroupsIcon fontSize="small" />,
-  },
 ];
 
 export default function Lnb({ drawerWidth }) {
@@ -84,7 +78,7 @@ export default function Lnb({ drawerWidth }) {
       <Toolbar sx={{ minHeight: 64, px: 3 }}>
         <Stack spacing={0.25}>
           <Typography component="div" variant="h6" sx={{ fontWeight: 800 }}>
-            KINGS BO
+            THE KINGS COMPANY
           </Typography>
           <Typography color="text.secondary" variant="caption">
             Backoffice Management
@@ -93,10 +87,6 @@ export default function Lnb({ drawerWidth }) {
       </Toolbar>
 
       <Divider />
-
-      <Box sx={{ px: 2, py: 2 }}>
-        <Chip color="primary" label="운영 메뉴" size="small" variant="outlined" />
-      </Box>
 
       <List dense={false} sx={{ px: 1.5 }}>
         {menuItems.map((item) => {

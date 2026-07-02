@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import {
@@ -22,6 +22,11 @@ import {
 } from "@mui/material";
 import { userService } from "@/api/user/userService";
 
+const userKeys = {
+  all: ["users"],
+  detail: (username) => ["users", username],
+};
+
 const roleOptions = [
   { code: "SUPER_ADMIN", label: "슈퍼 관리자" },
   { code: "ADMIN", label: "관리자" },
@@ -29,29 +34,61 @@ const roleOptions = [
   { code: "DEVELOPER", label: "개발자" },
 ];
 
-export default function UserCreatePage() {
+const toRoleOptions = (roles) => {
+  if (!Array.isArray(roles)) {
+    return [];
+  }
+
+  return roles
+    .map((role) =>
+      roleOptions.find((option) => option.code === (role.code ?? role)),
+    )
+    .filter(Boolean);
+};
+
+export default function UserDetailPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { username } = useParams();
+  const [nickname, setNickname] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [roleError, setRoleError] = useState("");
-  const [selectedRoles, setSelectedRoles] = useState([roleOptions[2]]);
+  const [selectedRoles, setSelectedRoles] = useState([]);
 
-  const createUserMutation = useMutation({
-    mutationFn: userService.createUser,
-    onSuccess: () => {
+  const userQuery = useQuery({
+    queryKey: userKeys.detail(username),
+    queryFn: () => userService.getUser(username),
+    enabled: Boolean(username),
+  });
+
+  const updateUserMutation = useMutation({
+    mutationFn: (payload) => userService.updateUser(username, payload),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: userKeys.all }),
+        queryClient.invalidateQueries({ queryKey: userKeys.detail(username) }),
+      ]);
       router.push("/users");
     },
   });
 
+  useEffect(() => {
+    if (!userQuery.data) {
+      return;
+    }
+
+    setNickname(userQuery.data.nickname ?? "");
+    setSelectedRoles(toRoleOptions(userQuery.data.roles));
+  }, [userQuery.data]);
+
   const handleSubmit = (event) => {
     event.preventDefault();
-    createUserMutation.reset();
+    updateUserMutation.reset();
     setPasswordError("");
     setRoleError("");
-
-    const formData = new FormData(event.currentTarget);
-    const password = String(formData.get("password") ?? "");
-    const passwordConfirm = String(formData.get("passwordConfirm") ?? "");
 
     if (password !== passwordConfirm) {
       setPasswordError("비밀번호가 일치하지 않습니다.");
@@ -63,31 +100,31 @@ export default function UserCreatePage() {
       return;
     }
 
-    createUserMutation.mutate({
-      username: String(formData.get("username") ?? "").trim(),
-      nickname: String(formData.get("nickname") ?? "").trim(),
-      password,
+    updateUserMutation.mutate({
+      nickname: nickname.trim(),
+      password: password || null,
       roles: selectedRoles.map((role) => role.code),
     });
   };
 
-  const error = createUserMutation.error;
+  const error = updateUserMutation.error ?? userQuery.error;
   const errorMessage =
     error instanceof Error
       ? error.message
       : error
-        ? "사용자 생성 중 오류가 발생했습니다."
+        ? "사용자 처리 중 오류가 발생했습니다."
         : "";
-  const isSubmitting = createUserMutation.isPending;
+  const isLoading = userQuery.isLoading;
+  const isSubmitting = updateUserMutation.isPending;
 
   return (
     <Stack spacing={2.5}>
       <Box>
         <Typography component="h2" variant="h5" sx={{ fontWeight: 800 }}>
-          사용자 생성
+          사용자 상세
         </Typography>
         <Typography color="text.secondary" variant="body2">
-          백오피스 로그인에 사용할 사용자 정보를 입력합니다.
+          백오피스 사용자 정보를 확인하고 수정합니다.
         </Typography>
       </Box>
 
@@ -102,37 +139,31 @@ export default function UserCreatePage() {
           {passwordError ? <Alert severity="error">{passwordError}</Alert> : null}
           {roleError ? <Alert severity="error">{roleError}</Alert> : null}
 
-          <TextField
-            required
-            autoComplete="username"
-            disabled={isSubmitting}
-            label="아이디"
-            name="username"
-            placeholder="로그인 아이디를 입력하세요"
-          />
+          <TextField disabled label="아이디" value={username ?? ""} />
           <TextField
             required
             autoComplete="name"
-            disabled={isSubmitting}
+            disabled={isLoading || isSubmitting}
             label="닉네임"
-            name="nickname"
             placeholder="사용자 닉네임을 입력하세요"
+            value={nickname}
+            onChange={(event) => setNickname(event.target.value)}
           />
           <TextField
-            required
             autoComplete="new-password"
-            disabled={isSubmitting}
+            disabled={isLoading || isSubmitting}
             label="비밀번호"
-            name="password"
-            placeholder="비밀번호를 입력하세요"
+            placeholder="변경할 때만 입력하세요"
             type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
                   <Tooltip title={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}>
                     <IconButton
                       edge="end"
-                      disabled={isSubmitting}
+                      disabled={isLoading || isSubmitting}
                       onClick={() => setShowPassword((value) => !value)}
                     >
                       {showPassword ? (
@@ -147,21 +178,21 @@ export default function UserCreatePage() {
             }}
           />
           <TextField
-            required
             autoComplete="new-password"
-            disabled={isSubmitting}
+            disabled={isLoading || isSubmitting}
             error={Boolean(passwordError)}
             helperText={passwordError || " "}
             label="비밀번호 확인"
-            name="passwordConfirm"
             placeholder="비밀번호를 다시 입력하세요"
             type={showPassword ? "text" : "password"}
+            value={passwordConfirm}
+            onChange={(event) => setPasswordConfirm(event.target.value)}
           />
 
           <Autocomplete
             multiple
             disableCloseOnSelect
-            disabled={isSubmitting}
+            disabled={isLoading || isSubmitting}
             getOptionLabel={(option) => option.label}
             isOptionEqualToValue={(option, value) => option.code === value.code}
             options={roleOptions}
@@ -199,9 +230,13 @@ export default function UserCreatePage() {
               disabled={isSubmitting}
               onClick={() => router.push("/users")}
             >
-              취소
+              목록
             </Button>
-            <Button disabled={isSubmitting} type="submit" variant="contained">
+            <Button
+              disabled={isLoading || isSubmitting}
+              type="submit"
+              variant="contained"
+            >
               {isSubmitting ? (
                 <CircularProgress color="inherit" size={20} />
               ) : (

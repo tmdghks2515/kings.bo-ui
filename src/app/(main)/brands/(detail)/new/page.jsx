@@ -44,6 +44,7 @@ export default function BrandCreatePage() {
     createBrandMutation.mutate({
       name: String(formData.get("name") ?? "").trim(),
       introduce: introduce || null,
+      sortOrder: Number(formData.get("sortOrder") ?? 0),
       logoStorageKey: logo?.storageKey ?? null,
       mainImageStorageKey: mainImage?.storageKey ?? null,
     });
@@ -93,6 +94,15 @@ export default function BrandCreatePage() {
             minRows={5}
             name="introduce"
             placeholder="브랜드 소개를 입력하세요"
+          />
+          <TextField
+            required
+            defaultValue={0}
+            disabled={isSubmitting}
+            inputProps={{ min: 0 }}
+            label="노출 순서"
+            name="sortOrder"
+            type="number"
           />
 
           <BrandImageInput

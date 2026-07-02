@@ -1,9 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import LogoutIcon from "@mui/icons-material/Logout";
 import {
   AppBar,
   Avatar,
-  Badge,
   Box,
   Button,
   Divider,
@@ -11,25 +13,27 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
+import { authService } from "@/api/auth/authService";
+import { authTokenStorage } from "@/api/httpClient";
 import { useAuthStore } from "@/stores/authStore";
 
-const getRoleLabel = (roles) => {
-  if (!roles?.length) {
-    return "권한 없음";
-  }
-
-  if (roles.includes("ADMIN")) {
-    return "관리자";
-  }
-
-  return roles.join(", ");
-};
-
 export default function Header({ drawerWidth }) {
+  const router = useRouter();
   const user = useAuthStore((state) => state.user);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
   const username = user?.username ?? "-";
-  const roleLabel = getRoleLabel(user?.roles);
   const avatarText = username ? username.slice(0, 1).toUpperCase() : "-";
+
+  const clearSession = () => {
+    authTokenStorage.clear();
+    clearAuth();
+    router.replace("/login");
+  };
+
+  const logoutMutation = useMutation({
+    mutationFn: authService.logout,
+    onSettled: clearSession,
+  });
 
   return (
     <AppBar
@@ -45,14 +49,7 @@ export default function Header({ drawerWidth }) {
       }}
     >
       <Toolbar sx={{ minHeight: { xs: 56, md: 64 }, px: { xs: 2, md: 3 } }}>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography component="h1" variant="h6" sx={{ fontWeight: 700 }}>
-            관리자 콘솔
-          </Typography>
-          <Typography color="text.secondary" variant="body2">
-            운영 현황과 업무 메뉴를 관리합니다.
-          </Typography>
-        </Box>
+        <Box sx={{ flex: 1, minWidth: 0 }} />
 
         <Stack
           alignItems="center"
@@ -60,21 +57,21 @@ export default function Header({ drawerWidth }) {
           divider={<Divider flexItem orientation="vertical" />}
           spacing={2}
         >
-          <Badge color="error" variant="dot">
-            <Button color="inherit" size="small" variant="text">
-              알림
-            </Button>
-          </Badge>
-
           <Stack alignItems="center" direction="row" spacing={1.25}>
             <Avatar sx={{ height: 34, width: 34 }}>{avatarText}</Avatar>
             <Box sx={{ display: { xs: "none", sm: "block" } }}>
               <Typography variant="subtitle2">{username}</Typography>
-              <Typography color="text.secondary" variant="caption">
-                {roleLabel}
-              </Typography>
             </Box>
           </Stack>
+          <Button
+            color="inherit"
+            disabled={logoutMutation.isPending}
+            startIcon={<LogoutIcon fontSize="small" />}
+            variant="text"
+            onClick={() => logoutMutation.mutate()}
+          >
+            로그아웃
+          </Button>
         </Stack>
       </Toolbar>
     </AppBar>

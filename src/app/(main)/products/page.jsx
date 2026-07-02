@@ -11,16 +11,32 @@ import {
   Box,
   Button,
   CircularProgress,
+  FormControl,
+  InputLabel,
   Link,
+  MenuItem,
   Paper,
+  Select,
   Stack,
+  TextField,
   Typography,
 } from "@mui/material";
+import { brandService } from "@/api/brand/brandService";
+import { categoryService } from "@/api/category/categoryService";
 import { productService } from "@/api/product/productService";
 import useConfirm from "@/hooks/useConfirm";
 
 const productKeys = {
   all: ["products"],
+  list: (filters) => [...productKeys.all, filters],
+};
+
+const brandKeys = {
+  all: ["brands"],
+};
+
+const categoryKeys = {
+  all: ["categories"],
 };
 
 const normalizeProducts = (response) => {
@@ -51,16 +67,47 @@ const formatPrice = (value) => {
   }).format(Number(value));
 };
 
+const flattenCategories = (categories) =>
+  (Array.isArray(categories) ? categories : []).flatMap((category) => [
+    category,
+    ...flattenCategories(category.children),
+  ]);
+
+const initialFilters = {
+  keyword: "",
+  categoryId: "",
+  brandId: "",
+};
+
+const toProductParams = (filters) => ({
+  keyword: filters.keyword.trim(),
+  categoryId: filters.categoryId,
+  brandId: filters.brandId,
+});
+
 export default function ProductListPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const confirm = useConfirm();
   const [rowSelectionModel, setRowSelectionModel] = useState([]);
+  const [filters, setFilters] = useState(initialFilters);
+  const [appliedFilters, setAppliedFilters] = useState(initialFilters);
 
   const productsQuery = useQuery({
-    queryKey: productKeys.all,
-    queryFn: () => productService.getProducts(),
+    queryKey: productKeys.list(appliedFilters),
+    queryFn: () => productService.getProducts(toProductParams(appliedFilters)),
     select: normalizeProducts,
+  });
+
+  const categoriesQuery = useQuery({
+    queryKey: categoryKeys.all,
+    queryFn: () => categoryService.getCategories(),
+    select: flattenCategories,
+  });
+
+  const brandsQuery = useQuery({
+    queryKey: brandKeys.all,
+    queryFn: () => brandService.getBrands(),
   });
 
   const deleteProductsMutation = useMutation({
@@ -137,7 +184,27 @@ export default function ProductListPage() {
     }
   };
 
-  const error = deleteProductsMutation.error ?? productsQuery.error;
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+    setRowSelectionModel([]);
+    setAppliedFilters({
+      keyword: filters.keyword.trim(),
+      categoryId: filters.categoryId,
+      brandId: filters.brandId,
+    });
+  };
+
+  const handleResetClick = () => {
+    setRowSelectionModel([]);
+    setFilters(initialFilters);
+    setAppliedFilters(initialFilters);
+  };
+
+  const error =
+    deleteProductsMutation.error ??
+    productsQuery.error ??
+    categoriesQuery.error ??
+    brandsQuery.error;
   const errorMessage =
     error instanceof Error
       ? error.message
@@ -146,6 +213,7 @@ export default function ProductListPage() {
         : "";
   const isLoading = productsQuery.isLoading || productsQuery.isFetching;
   const isDeleting = deleteProductsMutation.isPending;
+  const isFilterLoading = categoriesQuery.isLoading || brandsQuery.isLoading;
   const selectedCount = rowSelectionModel.length;
 
   return (
@@ -192,6 +260,89 @@ export default function ProductListPage() {
           </Button>
         </Stack>
       </Stack>
+
+      <Paper elevation={0} sx={{ border: 1, borderColor: "divider", p: 2.5 }}>
+        <Stack
+          component="form"
+          alignItems={{ xs: "stretch", md: "center" }}
+          direction={{ xs: "column", md: "row" }}
+          spacing={1.5}
+          onSubmit={handleSearchSubmit}
+        >
+          <TextField
+            label="상품코드 / 상품명"
+            placeholder="상품코드 또는 상품명을 입력하세요"
+            size="small"
+            sx={{ flex: 1, minWidth: { md: 260 } }}
+            value={filters.keyword}
+            onChange={(event) => {
+              setFilters((current) => ({
+                ...current,
+                keyword: event.target.value,
+              }));
+            }}
+          />
+          <FormControl size="small" sx={{ minWidth: { md: 180 } }}>
+            <InputLabel id="product-category-filter-label">카테고리</InputLabel>
+            <Select
+              label="카테고리"
+              labelId="product-category-filter-label"
+              value={filters.categoryId}
+              onChange={(event) => {
+                setFilters((current) => ({
+                  ...current,
+                  categoryId: event.target.value,
+                }));
+              }}
+            >
+              <MenuItem value="">전체</MenuItem>
+              {(categoriesQuery.data ?? []).map((category) => (
+                <MenuItem key={category.id} value={category.id}>
+                  {category.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: { md: 180 } }}>
+            <InputLabel id="product-brand-filter-label">브랜드</InputLabel>
+            <Select
+              label="브랜드"
+              labelId="product-brand-filter-label"
+              value={filters.brandId}
+              onChange={(event) => {
+                setFilters((current) => ({
+                  ...current,
+                  brandId: event.target.value,
+                }));
+              }}
+            >
+              <MenuItem value="">전체</MenuItem>
+              {(brandsQuery.data ?? []).map((brand) => (
+                <MenuItem key={brand.id} value={brand.id}>
+                  {brand.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Stack direction="row" spacing={1}>
+            <Button
+              disabled={isFilterLoading}
+              type="submit"
+              variant="contained"
+            >
+              검색
+            </Button>
+            <Button
+              color="inherit"
+              disabled={isFilterLoading}
+              variant="outlined"
+              onClick={handleResetClick}
+            >
+              초기화
+            </Button>
+          </Stack>
+        </Stack>
+      </Paper>
 
       <Paper
         elevation={0}

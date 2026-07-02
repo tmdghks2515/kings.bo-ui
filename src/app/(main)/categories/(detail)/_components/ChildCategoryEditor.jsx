@@ -3,14 +3,12 @@
 import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import {
   Box,
   Button,
-  FormControl,
   IconButton,
-  InputLabel,
-  MenuItem,
-  Select,
   Stack,
   Table,
   TableBody,
@@ -19,14 +17,13 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 
 const createChildCategory = (order) => ({
   id: `new-${order}`,
   name: "",
-  displayOrder: order,
-  status: "use",
 });
 
 const EMPTY_ROWS = [];
@@ -60,6 +57,23 @@ export default function ChildCategoryEditor({
 
   const handleRemove = (id) => {
     updateRows((currentRows) => currentRows.filter((row) => row.id !== id));
+  };
+
+  const handleMove = (index, direction) => {
+    updateRows((currentRows) => {
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= currentRows.length) {
+        return currentRows;
+      }
+
+      const nextRows = [...currentRows];
+      [nextRows[index], nextRows[targetIndex]] = [
+        nextRows[targetIndex],
+        nextRows[index],
+      ];
+
+      return nextRows;
+    });
   };
 
   const handleChange = (id, field, value) => {
@@ -98,7 +112,8 @@ export default function ChildCategoryEditor({
         </Button>
       </Stack>
 
-      {rows.length === 0 ? (<></>
+      {rows.length === 0 ? (
+        <></>
       ) : (
         <TableContainer
           sx={{
@@ -111,9 +126,8 @@ export default function ChildCategoryEditor({
           <Table size="small" sx={{ minWidth: 720 }}>
             <TableHead>
               <TableRow sx={{ bgcolor: "grey.50" }}>
+                <TableCell sx={{ fontWeight: 700, width: 110 }}>순서 이동</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>하위 카테고리 명</TableCell>
-                <TableCell sx={{ fontWeight: 700, width: 140 }}>노출 순서</TableCell>
-                <TableCell sx={{ fontWeight: 700, width: 160 }}>상태</TableCell>
                 <TableCell align="center" sx={{ fontWeight: 700, width: 80 }}>
                   삭제
                 </TableCell>
@@ -122,6 +136,32 @@ export default function ChildCategoryEditor({
             <TableBody>
               {rows.map((row, index) => (
                 <TableRow key={row.id}>
+                  <TableCell>
+                    <Stack direction="row" spacing={0.5}>
+                      <Tooltip title="위로 이동">
+                        <span>
+                          <IconButton
+                            disabled={index === 0}
+                            size="small"
+                            onClick={() => handleMove(index, -1)}
+                          >
+                            <KeyboardArrowUpIcon fontSize="small" />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                      <Tooltip title="아래로 이동">
+                        <span>
+                          <IconButton
+                            disabled={index === rows.length - 1}
+                            size="small"
+                            onClick={() => handleMove(index, 1)}
+                          >
+                            <KeyboardArrowDownIcon fontSize="small" />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    </Stack>
+                  </TableCell>
                   <TableCell>
                     <TextField
                       fullWidth
@@ -133,45 +173,16 @@ export default function ChildCategoryEditor({
                       }
                     />
                   </TableCell>
-                  <TableCell>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      type="number"
-                      value={row.displayOrder}
-                      onChange={(event) =>
-                        handleChange(row.id, "displayOrder", Number(event.target.value))
-                      }
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <FormControl fullWidth size="small">
-                      <InputLabel id={`child-category-status-${row.id}`}>
-                        상태
-                      </InputLabel>
-                      <Select
-                        label="상태"
-                        labelId={`child-category-status-${row.id}`}
-                        value={row.status}
-                        onChange={(event) =>
-                          handleChange(row.id, "status", event.target.value)
-                        }
-                      >
-                        <MenuItem value="use">사용</MenuItem>
-                        <MenuItem value="unused">미사용</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </TableCell>
                   <TableCell align="center">
                     <IconButton
                       aria-label={`${index + 1}번째 하위 카테고리 삭제`}
-                    color="error"
-                    size="small"
-                    onClick={() => handleRemove(row.id)}
-                  >
+                      color="error"
+                      size="small"
+                      onClick={() => handleRemove(row.id)}
+                    >
                       <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </TableCell>
+                    </IconButton>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

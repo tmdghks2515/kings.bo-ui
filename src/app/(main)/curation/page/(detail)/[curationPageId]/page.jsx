@@ -188,13 +188,6 @@ export default function CurationPageDetailPage() {
         minWidth: 150,
       },
       {
-        field: "sortOrder",
-        headerName: "노출 순서",
-        align: "right",
-        headerAlign: "right",
-        width: 120,
-      },
-      {
         field: "detailSummary",
         headerName: "구성",
         flex: 0.7,

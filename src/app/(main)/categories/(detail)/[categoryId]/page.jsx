@@ -50,11 +50,9 @@ const flattenCategories = (categories, excludedIds = new Set(), prefix = "") =>
   });
 
 const toChildRows = (children = []) =>
-  children.map((child, index) => ({
+  children.map((child) => ({
     id: child.id,
     name: child.name,
-    displayOrder: index + 1,
-    status: "use",
   }));
 
 const toChildCommands = (children, depth) =>
@@ -64,10 +62,11 @@ const toChildCommands = (children, depth) =>
       name: child.name.trim(),
     }))
     .filter((child) => child.name)
-    .map((child) => ({
+    .map((child, index) => ({
       id: typeof child.id === "number" ? child.id : null,
       depth,
       name: child.name,
+      sortOrder: index,
       parentCategoryId: null,
       children: [],
     }));
@@ -77,6 +76,7 @@ export default function CategoryDetailPage() {
   const queryClient = useQueryClient();
   const { categoryId } = useParams();
   const [name, setName] = useState("");
+  const [sortOrder, setSortOrder] = useState(0);
   const [parentCategoryId, setParentCategoryId] = useState("");
   const [childCategories, setChildCategories] = useState([]);
 
@@ -126,6 +126,7 @@ export default function CategoryDetailPage() {
     }
 
     setName(category.name ?? "");
+    setSortOrder(category.sortOrder ?? 0);
     setParentCategoryId(category.parentCategoryId ?? "");
   }, [category]);
 
@@ -146,6 +147,7 @@ export default function CategoryDetailPage() {
       id: Number(categoryId),
       depth,
       name: name.trim(),
+      sortOrder: Number(sortOrder ?? 0),
       parentCategoryId: selectedParent ? selectedParent.id : null,
       children: toChildCommands(childCategories, depth + 1),
     });
@@ -191,6 +193,15 @@ export default function CategoryDetailPage() {
             label="카테고리 명"
             value={name}
             onChange={(event) => setName(event.target.value)}
+          />
+          <TextField
+            required
+            disabled={isLoading || isSubmitting}
+            inputProps={{ min: 0 }}
+            label="노출 순서"
+            type="number"
+            value={sortOrder}
+            onChange={(event) => setSortOrder(event.target.value)}
           />
           <FormControl>
             <InputLabel id="parent-category-label">상위 카테고리</InputLabel>

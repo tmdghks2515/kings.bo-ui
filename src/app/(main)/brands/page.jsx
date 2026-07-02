@@ -80,6 +80,13 @@ export default function BrandListPage() {
         minWidth: 260,
       },
       {
+        field: "sortOrder",
+        headerName: "노출 순서",
+        align: "right",
+        headerAlign: "right",
+        width: 120,
+      },
+      {
         field: "logoName",
         headerName: "로고",
         flex: 0.8,

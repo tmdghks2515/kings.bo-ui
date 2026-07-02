@@ -39,6 +39,7 @@ export default function BrandDetailPage() {
   const { brandId } = useParams();
   const [name, setName] = useState("");
   const [introduce, setIntroduce] = useState("");
+  const [sortOrder, setSortOrder] = useState(0);
   const [logo, setLogo] = useState(null);
   const [mainImage, setMainImage] = useState(null);
 
@@ -66,6 +67,7 @@ export default function BrandDetailPage() {
 
     setName(brandQuery.data.name ?? "");
     setIntroduce(brandQuery.data.introduce ?? "");
+    setSortOrder(brandQuery.data.sortOrder ?? 0);
     setLogo(toImage(brandQuery.data.logo, brandQuery.data.logoStorageKey));
     setMainImage(
       toImage(brandQuery.data.mainImage, brandQuery.data.mainImageStorageKey),
@@ -79,6 +81,7 @@ export default function BrandDetailPage() {
     updateBrandMutation.mutate({
       name: name.trim(),
       introduce: introduce.trim() || null,
+      sortOrder: Number(sortOrder ?? 0),
       logoStorageKey: logo?.storageKey ?? null,
       mainImageStorageKey: mainImage?.storageKey ?? null,
     });
@@ -130,6 +133,15 @@ export default function BrandDetailPage() {
             minRows={5}
             value={introduce}
             onChange={(event) => setIntroduce(event.target.value)}
+          />
+          <TextField
+            required
+            disabled={isLoading || isSubmitting}
+            inputProps={{ min: 0 }}
+            label="노출 순서"
+            type="number"
+            value={sortOrder}
+            onChange={(event) => setSortOrder(event.target.value)}
           />
 
           <BrandImageInput

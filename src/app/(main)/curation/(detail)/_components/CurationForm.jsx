@@ -165,16 +165,6 @@ export default function CurationForm({ curationId, curationPageId }) {
               value={name}
               onChange={(event) => setName(event.target.value)}
             />
-            <TextField
-              required
-              disabled={isLoading || isSubmitting}
-              fullWidth
-              inputProps={{ min: 0 }}
-              label="노출 순서"
-              type="number"
-              value={sortOrder}
-              onChange={(event) => setSortOrder(event.target.value)}
-            />
           </Stack>
 
           <CurationTypeSelect

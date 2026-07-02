@@ -84,18 +84,21 @@ export default function CategoryCreatePage() {
         name: child.name.trim(),
       }))
       .filter((child) => child.name)
-      .map((child) => ({
+      .map((child, index) => ({
         id: null,
         depth: depth + 1,
         name: child.name,
+        sortOrder: index,
         parentCategoryId: null,
         children: [],
       }));
+    const sortOrder = Number(formData.get("sortOrder") ?? 0);
 
     createCategoryMutation.mutate({
       id: null,
       depth,
       name,
+      sortOrder,
       parentCategoryId,
       children,
     });
@@ -159,20 +162,9 @@ export default function CategoryCreatePage() {
             defaultValue={1}
             inputProps={{ min: 1 }}
             label="노출 순서"
+            name="sortOrder"
             type="number"
           />
-          <FormControl>
-            <InputLabel id="category-status-label">상태</InputLabel>
-            <Select
-              defaultValue="use"
-              disabled={isSubmitting}
-              label="상태"
-              labelId="category-status-label"
-            >
-              <MenuItem value="use">사용</MenuItem>
-              <MenuItem value="unused">미사용</MenuItem>
-            </Select>
-          </FormControl>
 
           <ChildCategoryEditor onRowsChange={handleChildRowsChange} />
 
