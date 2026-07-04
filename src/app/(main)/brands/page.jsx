@@ -99,7 +99,7 @@ export default function BrandListPage() {
         minWidth: 220,
       },
     ],
-    [],
+    []
   );
 
   const handleDeleteClick = async () => {
@@ -120,11 +120,7 @@ export default function BrandListPage() {
 
   const error = deleteBrandsMutation.error ?? brandsQuery.error;
   const errorMessage =
-    error instanceof Error
-      ? error.message
-      : error
-        ? "브랜드 처리 중 오류가 발생했습니다."
-        : "";
+    error instanceof Error ? error.message : error ? "브랜드 처리 중 오류가 발생했습니다." : "";
   const isLoading = brandsQuery.isLoading || brandsQuery.isFetching;
   const isDeleting = deleteBrandsMutation.isPending;
   const selectedCount = rowSelectionModel.length;

@@ -69,9 +69,7 @@ export default function BrandDetailPage() {
     setIntroduce(brandQuery.data.introduce ?? "");
     setSortOrder(brandQuery.data.sortOrder ?? 0);
     setLogo(toImage(brandQuery.data.logo, brandQuery.data.logoStorageKey));
-    setMainImage(
-      toImage(brandQuery.data.mainImage, brandQuery.data.mainImageStorageKey),
-    );
+    setMainImage(toImage(brandQuery.data.mainImage, brandQuery.data.mainImageStorageKey));
   }, [brandQuery.data]);
 
   const handleSubmit = (event) => {
@@ -89,11 +87,7 @@ export default function BrandDetailPage() {
 
   const error = updateBrandMutation.error ?? brandQuery.error;
   const errorMessage =
-    error instanceof Error
-      ? error.message
-      : error
-        ? "브랜드 처리 중 오류가 발생했습니다."
-        : "";
+    error instanceof Error ? error.message : error ? "브랜드 처리 중 오류가 발생했습니다." : "";
   const isLoading = brandQuery.isLoading;
   const isSubmitting = updateBrandMutation.isPending;
 
@@ -109,12 +103,7 @@ export default function BrandDetailPage() {
       </Box>
 
       <Paper elevation={0} sx={{ border: 1, borderColor: "divider", p: 3 }}>
-        <Stack
-          component="form"
-          spacing={2.5}
-          sx={{ maxWidth: 760 }}
-          onSubmit={handleSubmit}
-        >
+        <Stack component="form" spacing={2.5} sx={{ maxWidth: 760 }} onSubmit={handleSubmit}>
           {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
 
           <TextField disabled label="브랜드 ID" value={brandId ?? ""} />
@@ -161,23 +150,11 @@ export default function BrandDetailPage() {
           />
 
           <Stack direction="row" justifyContent="flex-end" spacing={1}>
-            <Button
-              color="inherit"
-              disabled={isSubmitting}
-              onClick={() => router.push("/brands")}
-            >
+            <Button color="inherit" disabled={isSubmitting} onClick={() => router.push("/brands")}>
               목록
             </Button>
-            <Button
-              disabled={isLoading || isSubmitting}
-              type="submit"
-              variant="contained"
-            >
-              {isSubmitting ? (
-                <CircularProgress color="inherit" size={20} />
-              ) : (
-                "저장"
-              )}
+            <Button disabled={isLoading || isSubmitting} type="submit" variant="contained">
+              {isSubmitting ? <CircularProgress color="inherit" size={20} /> : "저장"}
             </Button>
           </Stack>
         </Stack>

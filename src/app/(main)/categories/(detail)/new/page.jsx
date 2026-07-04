@@ -33,10 +33,7 @@ const flattenCategories = (categories, prefix = "") =>
       label,
     };
 
-    return [
-      item,
-      ...flattenCategories(category.children ?? [], label),
-    ];
+    return [item, ...flattenCategories(category.children ?? [], label)];
   });
 
 export default function CategoryCreatePage() {
@@ -46,8 +43,7 @@ export default function CategoryCreatePage() {
   const parentCategoriesQuery = useQuery({
     queryKey: categoryKeys.all,
     queryFn: () => categoryService.getCategories(),
-    select: (categories) =>
-      flattenCategories(Array.isArray(categories) ? categories : []),
+    select: (categories) => flattenCategories(Array.isArray(categories) ? categories : []),
   });
 
   const createCategoryMutation = useMutation({
@@ -59,7 +55,7 @@ export default function CategoryCreatePage() {
 
   const parentCategoryOptions = useMemo(
     () => parentCategoriesQuery.data ?? [],
-    [parentCategoriesQuery.data],
+    [parentCategoriesQuery.data]
   );
 
   const handleChildRowsChange = useCallback((rows) => {
@@ -74,7 +70,7 @@ export default function CategoryCreatePage() {
     const name = String(formData.get("name") ?? "").trim();
     const parentCategoryIdValue = String(formData.get("parentCategoryId") ?? "");
     const parentCategory = parentCategoryOptions.find(
-      (option) => String(option.id) === parentCategoryIdValue,
+      (option) => String(option.id) === parentCategoryIdValue
     );
     const depth = parentCategory ? parentCategory.depth + 1 : 0;
     const parentCategoryId = parentCategory ? parentCategory.id : null;
@@ -106,11 +102,7 @@ export default function CategoryCreatePage() {
 
   const error = createCategoryMutation.error ?? parentCategoriesQuery.error;
   const errorMessage =
-    error instanceof Error
-      ? error.message
-      : error
-        ? "카테고리 처리 중 오류가 발생했습니다."
-        : "";
+    error instanceof Error ? error.message : error ? "카테고리 처리 중 오류가 발생했습니다." : "";
   const isLoadingParents = parentCategoriesQuery.isLoading;
   const isSubmitting = createCategoryMutation.isPending;
 
@@ -126,12 +118,7 @@ export default function CategoryCreatePage() {
       </Box>
 
       <Paper elevation={0} sx={{ border: 1, borderColor: "divider", p: 3 }}>
-        <Stack
-          component="form"
-          spacing={2.5}
-          sx={{ maxWidth: 760 }}
-          onSubmit={handleSubmit}
-        >
+        <Stack component="form" spacing={2.5} sx={{ maxWidth: 760 }} onSubmit={handleSubmit}>
           {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
 
           <TextField
@@ -177,11 +164,7 @@ export default function CategoryCreatePage() {
               취소
             </Button>
             <Button disabled={isSubmitting} type="submit" variant="contained">
-              {isSubmitting ? (
-                <CircularProgress color="inherit" size={20} />
-              ) : (
-                "저장"
-              )}
+              {isSubmitting ? <CircularProgress color="inherit" size={20} /> : "저장"}
             </Button>
           </Stack>
         </Stack>

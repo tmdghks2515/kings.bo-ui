@@ -1,11 +1,14 @@
 import "./globals.css";
-import MuiThemeProvider from "../theme/MuiThemeProvider";
+import MuiThemeProvider from "../providers/MuiThemeProvider";
 import ConfirmProvider from "@/providers/ConfirmProvider";
 import QueryProvider from "@/providers/QueryProvider";
 
 export const metadata = {
-  title: "bo-ui",
-  description: "Back office UI",
+  title: "더킹즈컴퍼니 Back Office",
+  description: "더킹즈컴퍼니 Back Office",
+  icons: {
+    icon: "/logo/thekingslogosmall.png",
+  },
 };
 
 export default function RootLayout({ children }) {

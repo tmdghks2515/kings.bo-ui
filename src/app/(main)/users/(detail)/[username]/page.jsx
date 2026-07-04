@@ -40,9 +40,7 @@ const toRoleOptions = (roles) => {
   }
 
   return roles
-    .map((role) =>
-      roleOptions.find((option) => option.code === (role.code ?? role)),
-    )
+    .map((role) => roleOptions.find((option) => option.code === (role.code ?? role)))
     .filter(Boolean);
 };
 
@@ -109,11 +107,7 @@ export default function UserDetailPage() {
 
   const error = updateUserMutation.error ?? userQuery.error;
   const errorMessage =
-    error instanceof Error
-      ? error.message
-      : error
-        ? "사용자 처리 중 오류가 발생했습니다."
-        : "";
+    error instanceof Error ? error.message : error ? "사용자 처리 중 오류가 발생했습니다." : "";
   const isLoading = userQuery.isLoading;
   const isSubmitting = updateUserMutation.isPending;
 
@@ -129,12 +123,7 @@ export default function UserDetailPage() {
       </Box>
 
       <Paper elevation={0} sx={{ border: 1, borderColor: "divider", p: 3 }}>
-        <Stack
-          component="form"
-          spacing={2.5}
-          sx={{ maxWidth: 760 }}
-          onSubmit={handleSubmit}
-        >
+        <Stack component="form" spacing={2.5} sx={{ maxWidth: 760 }} onSubmit={handleSubmit}>
           {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
           {passwordError ? <Alert severity="error">{passwordError}</Alert> : null}
           {roleError ? <Alert severity="error">{roleError}</Alert> : null}
@@ -225,23 +214,11 @@ export default function UserDetailPage() {
           />
 
           <Stack direction="row" justifyContent="flex-end" spacing={1}>
-            <Button
-              color="inherit"
-              disabled={isSubmitting}
-              onClick={() => router.push("/users")}
-            >
+            <Button color="inherit" disabled={isSubmitting} onClick={() => router.push("/users")}>
               목록
             </Button>
-            <Button
-              disabled={isLoading || isSubmitting}
-              type="submit"
-              variant="contained"
-            >
-              {isSubmitting ? (
-                <CircularProgress color="inherit" size={20} />
-              ) : (
-                "저장"
-              )}
+            <Button disabled={isLoading || isSubmitting} type="submit" variant="contained">
+              {isSubmitting ? <CircularProgress color="inherit" size={20} /> : "저장"}
             </Button>
           </Stack>
         </Stack>

@@ -28,10 +28,7 @@ const createChildCategory = (order) => ({
 
 const EMPTY_ROWS = [];
 
-export default function ChildCategoryEditor({
-  initialRows = EMPTY_ROWS,
-  onRowsChange,
-}) {
+export default function ChildCategoryEditor({ initialRows = EMPTY_ROWS, onRowsChange }) {
   const [rows, setRows] = useState(initialRows);
   const [nextOrder, setNextOrder] = useState(initialRows.length + 1);
 
@@ -45,9 +42,7 @@ export default function ChildCategoryEditor({
   }, [onRowsChange, rows]);
 
   const updateRows = (updater) => {
-    setRows((currentRows) =>
-      typeof updater === "function" ? updater(currentRows) : updater,
-    );
+    setRows((currentRows) => (typeof updater === "function" ? updater(currentRows) : updater));
   };
 
   const handleAdd = () => {
@@ -67,10 +62,7 @@ export default function ChildCategoryEditor({
       }
 
       const nextRows = [...currentRows];
-      [nextRows[index], nextRows[targetIndex]] = [
-        nextRows[targetIndex],
-        nextRows[index],
-      ];
+      [nextRows[index], nextRows[targetIndex]] = [nextRows[targetIndex], nextRows[index]];
 
       return nextRows;
     });
@@ -84,8 +76,8 @@ export default function ChildCategoryEditor({
               ...row,
               [field]: value,
             }
-          : row,
-      ),
+          : row
+      )
     );
   };
 
@@ -103,11 +95,7 @@ export default function ChildCategoryEditor({
           </Typography>
         </Box>
 
-        <Button
-          startIcon={<AddIcon fontSize="small" />}
-          variant="outlined"
-          onClick={handleAdd}
-        >
+        <Button startIcon={<AddIcon fontSize="small" />} variant="outlined" onClick={handleAdd}>
           추가
         </Button>
       </Stack>
@@ -168,9 +156,7 @@ export default function ChildCategoryEditor({
                       placeholder="하위 카테고리 명"
                       size="small"
                       value={row.name}
-                      onChange={(event) =>
-                        handleChange(row.id, "name", event.target.value)
-                      }
+                      onChange={(event) => handleChange(row.id, "name", event.target.value)}
                     />
                   </TableCell>
                   <TableCell align="center">

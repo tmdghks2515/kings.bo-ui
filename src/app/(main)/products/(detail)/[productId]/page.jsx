@@ -53,7 +53,7 @@ const toOptionRows = (options = []) =>
   }));
 
 const getStorageKey = (image) =>
-  typeof image === "string" ? image : image?.storageKey;
+  typeof image === "string" ? image : (image?.storageKey ?? image?.imageStorageKey);
 
 const getImageValue = (image, fieldName) =>
   typeof image === "string" ? undefined : image?.[fieldName];
@@ -88,12 +88,11 @@ const toOptionPayload = (options) =>
 
 const toImagePayload = (images) =>
   images.map((image) => ({
-    storageKey: image.storageKey,
+    imageStorageKey: image.storageKey,
     main: Boolean(image.main),
   }));
 
-const toDetailImagePayload = (images) =>
-  images.map((image) => image.storageKey);
+const toDetailImagePayload = (images) => images.map((image) => image.storageKey);
 
 export default function ProductDetailPage() {
   const router = useRouter();
@@ -139,7 +138,7 @@ export default function ProductDetailPage() {
 
   const initialOptionRows = useMemo(
     () => toOptionRows(productQuery.data?.options ?? []),
-    [productQuery.data],
+    [productQuery.data]
   );
 
   useEffect(() => {
@@ -182,16 +181,9 @@ export default function ProductDetailPage() {
   };
 
   const error =
-    updateProductMutation.error ??
-    productQuery.error ??
-    categoriesQuery.error ??
-    brandsQuery.error;
+    updateProductMutation.error ?? productQuery.error ?? categoriesQuery.error ?? brandsQuery.error;
   const errorMessage =
-    error instanceof Error
-      ? error.message
-      : error
-        ? "상품 처리 중 오류가 발생했습니다."
-        : "";
+    error instanceof Error ? error.message : error ? "상품 처리 중 오류가 발생했습니다." : "";
   const isLoading = productQuery.isLoading;
   const isLoadingCategories = categoriesQuery.isLoading;
   const isLoadingBrands = brandsQuery.isLoading;
@@ -222,19 +214,9 @@ export default function ProductDetailPage() {
 
         <Box sx={{ p: 3 }}>
           {activeTab === "basic" ? (
-            <Stack
-              component="form"
-              spacing={2.5}
-              sx={{ maxWidth: 900 }}
-              onSubmit={handleSubmit}
-            >
+            <Stack component="form" spacing={2.5} sx={{ maxWidth: 900 }} onSubmit={handleSubmit}>
               <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                <TextField
-                  disabled
-                  fullWidth
-                  label="상품 코드"
-                  value={productId ?? ""}
-                />
+                <TextField disabled fullWidth label="상품 코드" value={productId ?? ""} />
                 <TextField
                   required
                   disabled={isLoading || isSubmitting}
@@ -285,16 +267,8 @@ export default function ProductDetailPage() {
                 >
                   목록
                 </Button>
-                <Button
-                  disabled={isLoading || isSubmitting}
-                  type="submit"
-                  variant="contained"
-                >
-                  {isSubmitting ? (
-                    <CircularProgress color="inherit" size={20} />
-                  ) : (
-                    "저장"
-                  )}
+                <Button disabled={isLoading || isSubmitting} type="submit" variant="contained">
+                  {isSubmitting ? <CircularProgress color="inherit" size={20} /> : "저장"}
                 </Button>
               </Stack>
             </Stack>
@@ -321,11 +295,7 @@ export default function ProductDetailPage() {
                   variant="contained"
                   onClick={handleImageSave}
                 >
-                  {isSubmitting ? (
-                    <CircularProgress color="inherit" size={20} />
-                  ) : (
-                    "저장"
-                  )}
+                  {isSubmitting ? <CircularProgress color="inherit" size={20} /> : "저장"}
                 </Button>
               </Stack>
             </Stack>

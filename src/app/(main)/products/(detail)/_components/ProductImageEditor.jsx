@@ -29,8 +29,7 @@ const toUploadedImage = (fileResource, fallbackFile) => {
 
   return {
     storageKey: fileResource.storageKey,
-    originalName:
-      fileResource.originalName ?? fallbackFile?.name ?? fileResource.storageKey,
+    originalName: fileResource.originalName ?? fallbackFile?.name ?? fileResource.storageKey,
     contentType: fileResource.contentType ?? fallbackFile?.type ?? "",
     extension: fileResource.extension ?? "",
     sizeBytes: fileResource.sizeBytes ?? fallbackFile?.size ?? 0,
@@ -90,9 +89,7 @@ export default function ProductImageEditor({
       }
     } catch (error) {
       setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "이미지 업로드 중 오류가 발생했습니다.",
+        error instanceof Error ? error.message : "이미지 업로드 중 오류가 발생했습니다."
       );
     } finally {
       setUploadTarget(null);
@@ -100,9 +97,7 @@ export default function ProductImageEditor({
   };
 
   const handleRemoveImage = (storageKey) => {
-    const nextImages = images.filter(
-      (image) => image.storageKey !== storageKey,
-    );
+    const nextImages = images.filter((image) => image.storageKey !== storageKey);
 
     if (nextImages.length > 0 && !nextImages.some((image) => image.main)) {
       nextImages[0] = {
@@ -119,14 +114,12 @@ export default function ProductImageEditor({
       images.map((image) => ({
         ...image,
         main: image.storageKey === storageKey,
-      })),
+      }))
     );
   };
 
   const handleRemoveDetailImage = (storageKey) => {
-    onDetailImagesChange(
-      detailImages.filter((image) => image.storageKey !== storageKey),
-    );
+    onDetailImagesChange(detailImages.filter((image) => image.storageKey !== storageKey));
   };
 
   const isUploadingImages = uploadTarget === "images";
@@ -211,9 +204,7 @@ export default function ProductImageEditor({
                     primary={
                       <Stack alignItems="center" direction="row" spacing={1}>
                         <span>{image.originalName ?? image.storageKey}</span>
-                        {image.main ? (
-                          <Chip color="primary" label="대표" size="small" />
-                        ) : null}
+                        {image.main ? <Chip color="primary" label="대표" size="small" /> : null}
                       </Stack>
                     }
                     secondary={formatFileSize(image.sizeBytes)}
@@ -249,10 +240,7 @@ export default function ProductImageEditor({
               multiple
               type="file"
               onChange={(event) => {
-                uploadFiles(
-                  Array.from(event.target.files ?? []),
-                  "detailImages",
-                );
+                uploadFiles(Array.from(event.target.files ?? []), "detailImages");
                 event.target.value = "";
               }}
             />
@@ -285,9 +273,7 @@ export default function ProductImageEditor({
                       edge="end"
                       color="error"
                       disabled={disabled || Boolean(uploadTarget)}
-                      onClick={() =>
-                        handleRemoveDetailImage(image.storageKey)
-                      }
+                      onClick={() => handleRemoveDetailImage(image.storageKey)}
                     >
                       <DeleteIcon fontSize="small" />
                     </IconButton>

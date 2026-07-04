@@ -79,9 +79,7 @@ export default function CurationPageDetailPage() {
 
   const deleteCurationsMutation = useMutation({
     mutationFn: (curationIds) =>
-      Promise.all(
-        curationIds.map((curationId) => displayService.deleteDisplay(curationId)),
-      ),
+      Promise.all(curationIds.map((curationId) => displayService.deleteDisplay(curationId))),
     onSuccess: async () => {
       setRowSelectionModel([]);
       await Promise.all([
@@ -123,7 +121,7 @@ export default function CurationPageDetailPage() {
       reorderedRows.map((row, index) => ({
         id: row.id,
         sortOrder: index,
-      })),
+      }))
     );
   };
 
@@ -194,7 +192,7 @@ export default function CurationPageDetailPage() {
         minWidth: 130,
       },
     ],
-    [curationPageId, isMoving, rows],
+    [curationPageId, isMoving, rows]
   );
 
   const handleDeleteClick = async () => {
@@ -214,9 +212,7 @@ export default function CurationPageDetailPage() {
   };
 
   const error =
-    updateSortOrdersMutation.error ??
-    deleteCurationsMutation.error ??
-    curationPageQuery.error;
+    updateSortOrdersMutation.error ?? deleteCurationsMutation.error ?? curationPageQuery.error;
   const errorMessage =
     error instanceof Error
       ? error.message

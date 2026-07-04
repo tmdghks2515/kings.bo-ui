@@ -33,16 +33,11 @@ const curationKeys = {
 export default function CurationForm({ curationId, curationPageId }) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const returnPath = curationPageId
-    ? `/curation/page/${curationPageId}`
-    : "/curation/page";
   const isEdit = Boolean(curationId);
   const [type, setType] = useState("MAIN_BANNER");
   const [name, setName] = useState("");
   const [sortOrder, setSortOrder] = useState(0);
-  const [detail, setDetail] = useState(() =>
-    createInitialDetailState("MAIN_BANNER"),
-  );
+  const [detail, setDetail] = useState(() => createInitialDetailState("MAIN_BANNER"));
 
   const curationQuery = useQuery({
     queryKey: curationKeys.detail(curationId),
@@ -82,7 +77,7 @@ export default function CurationForm({ curationId, curationPageId }) {
             })
           : Promise.resolve(),
       ]);
-      router.push(returnPath);
+      router.back();
     },
   });
 
@@ -123,11 +118,7 @@ export default function CurationForm({ curationId, curationPageId }) {
     categoriesQuery.error ??
     brandsQuery.error;
   const errorMessage =
-    error instanceof Error
-      ? error.message
-      : error
-        ? "큐레이션 처리 중 오류가 발생했습니다."
-        : "";
+    error instanceof Error ? error.message : error ? "큐레이션 처리 중 오류가 발생했습니다." : "";
   const isSubmitting = saveCurationMutation.isPending;
   const isLoading = curationQuery.isLoading;
   const isLoadingOptions =
@@ -147,12 +138,7 @@ export default function CurationForm({ curationId, curationPageId }) {
       </Box>
 
       <Paper elevation={0} sx={{ border: 1, borderColor: "divider", p: 3 }}>
-        <Stack
-          component="form"
-          spacing={2.5}
-          sx={{ maxWidth: 960 }}
-          onSubmit={handleSubmit}
-        >
+        <Stack component="form" spacing={2.5} sx={{ maxWidth: 960 }} onSubmit={handleSubmit}>
           {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
 
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
@@ -164,6 +150,16 @@ export default function CurationForm({ curationId, curationPageId }) {
               placeholder="큐레이션 명을 입력하세요"
               value={name}
               onChange={(event) => setName(event.target.value)}
+            />
+            <TextField
+              required
+              disabled={isLoading || isSubmitting}
+              fullWidth
+              inputProps={{ min: 0 }}
+              label="노출 순서"
+              type="number"
+              value={sortOrder}
+              onChange={(event) => setSortOrder(event.target.value)}
             />
           </Stack>
 
@@ -184,19 +180,11 @@ export default function CurationForm({ curationId, curationPageId }) {
           />
 
           <Stack direction="row" justifyContent="flex-end" spacing={1}>
-            <Button
-              color="inherit"
-              disabled={isSubmitting}
-              onClick={() => router.push(returnPath)}
-            >
+            <Button color="inherit" disabled={isSubmitting} onClick={() => router.back()}>
               취소
             </Button>
             <Button disabled={isSubmitting} type="submit" variant="contained">
-              {isSubmitting ? (
-                <CircularProgress color="inherit" size={20} />
-              ) : (
-                "저장"
-              )}
+              {isSubmitting ? <CircularProgress color="inherit" size={20} /> : "저장"}
             </Button>
           </Stack>
         </Stack>

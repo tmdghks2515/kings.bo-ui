@@ -43,10 +43,7 @@ const flattenCategories = (categories, excludedIds = new Set(), prefix = "") =>
       label,
     };
 
-    return [
-      item,
-      ...flattenCategories(category.children ?? [], excludedIds, label),
-    ];
+    return [item, ...flattenCategories(category.children ?? [], excludedIds, label)];
   });
 
 const toChildRows = (children = []) =>
@@ -107,18 +104,13 @@ export default function CategoryDetailPage() {
   const category = categoryQuery.data;
 
   const parentCategoryOptions = useMemo(() => {
-    const categories = Array.isArray(parentCategoriesQuery.data)
-      ? parentCategoriesQuery.data
-      : [];
+    const categories = Array.isArray(parentCategoriesQuery.data) ? parentCategoriesQuery.data : [];
     const excludedIds = category ? new Set(collectCategoryIds(category)) : new Set();
 
     return flattenCategories(categories, excludedIds);
   }, [category, parentCategoriesQuery.data]);
 
-  const initialChildRows = useMemo(
-    () => toChildRows(category?.children ?? []),
-    [category],
-  );
+  const initialChildRows = useMemo(() => toChildRows(category?.children ?? []), [category]);
 
   useEffect(() => {
     if (!category) {
@@ -139,7 +131,7 @@ export default function CategoryDetailPage() {
     updateCategoryMutation.reset();
 
     const selectedParent = parentCategoryOptions.find(
-      (option) => String(option.id) === String(parentCategoryId),
+      (option) => String(option.id) === String(parentCategoryId)
     );
     const depth = selectedParent ? selectedParent.depth + 1 : 0;
 
@@ -153,16 +145,9 @@ export default function CategoryDetailPage() {
     });
   };
 
-  const error =
-    updateCategoryMutation.error ??
-    categoryQuery.error ??
-    parentCategoriesQuery.error;
+  const error = updateCategoryMutation.error ?? categoryQuery.error ?? parentCategoriesQuery.error;
   const errorMessage =
-    error instanceof Error
-      ? error.message
-      : error
-        ? "카테고리 처리 중 오류가 발생했습니다."
-        : "";
+    error instanceof Error ? error.message : error ? "카테고리 처리 중 오류가 발생했습니다." : "";
   const isLoading = categoryQuery.isLoading || parentCategoriesQuery.isLoading;
   const isSubmitting = updateCategoryMutation.isPending;
 
@@ -178,12 +163,7 @@ export default function CategoryDetailPage() {
       </Box>
 
       <Paper elevation={0} sx={{ border: 1, borderColor: "divider", p: 3 }}>
-        <Stack
-          component="form"
-          spacing={2.5}
-          sx={{ maxWidth: 760 }}
-          onSubmit={handleSubmit}
-        >
+        <Stack component="form" spacing={2.5} sx={{ maxWidth: 760 }} onSubmit={handleSubmit}>
           {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
 
           <TextField disabled label="카테고리 ID" value={categoryId ?? ""} />
@@ -226,7 +206,7 @@ export default function CategoryDetailPage() {
             value={
               parentCategoryId
                 ? (parentCategoryOptions.find(
-                    (option) => String(option.id) === String(parentCategoryId),
+                    (option) => String(option.id) === String(parentCategoryId)
                   )?.depth ?? -1) + 1
                 : 0
             }
@@ -246,16 +226,8 @@ export default function CategoryDetailPage() {
             >
               목록
             </Button>
-            <Button
-              disabled={isLoading || isSubmitting}
-              type="submit"
-              variant="contained"
-            >
-              {isSubmitting ? (
-                <CircularProgress color="inherit" size={20} />
-              ) : (
-                "저장"
-              )}
+            <Button disabled={isLoading || isSubmitting} type="submit" variant="contained">
+              {isSubmitting ? <CircularProgress color="inherit" size={20} /> : "저장"}
             </Button>
           </Stack>
         </Stack>

@@ -8,7 +8,5 @@ export default function CurationDetailPage() {
   const searchParams = useSearchParams();
   const curationPageId = searchParams.get("curationPageId");
 
-  return (
-    <CurationForm curationId={curationId} curationPageId={curationPageId} />
-  );
+  return <CurationForm curationId={curationId} curationPageId={curationPageId} />;
 }

@@ -33,10 +33,7 @@ const flattenCategories = (categories, parentName = "-") =>
       childCount: category.children?.length ?? 0,
     };
 
-    return [
-      row,
-      ...flattenCategories(category.children ?? [], category.name),
-    ];
+    return [row, ...flattenCategories(category.children ?? [], category.name)];
   });
 
 export default function CategoryListPage() {
@@ -48,8 +45,7 @@ export default function CategoryListPage() {
   const categoriesQuery = useQuery({
     queryKey: categoryKeys.all,
     queryFn: () => categoryService.getCategories(),
-    select: (categories) =>
-      flattenCategories(Array.isArray(categories) ? categories : []),
+    select: (categories) => flattenCategories(Array.isArray(categories) ? categories : []),
   });
 
   const deleteCategoriesMutation = useMutation({
@@ -94,7 +90,7 @@ export default function CategoryListPage() {
         width: 150,
       },
     ],
-    [],
+    []
   );
 
   const handleDeleteClick = async () => {
@@ -115,11 +111,7 @@ export default function CategoryListPage() {
 
   const error = deleteCategoriesMutation.error ?? categoriesQuery.error;
   const errorMessage =
-    error instanceof Error
-      ? error.message
-      : error
-        ? "카테고리 처리 중 오류가 발생했습니다."
-        : "";
+    error instanceof Error ? error.message : error ? "카테고리 처리 중 오류가 발생했습니다." : "";
   const isLoading = categoriesQuery.isLoading || categoriesQuery.isFetching;
   const isDeleting = deleteCategoriesMutation.isPending;
   const selectedCount = rowSelectionModel.length;

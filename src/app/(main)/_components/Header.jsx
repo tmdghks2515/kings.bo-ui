@@ -1,18 +1,7 @@
-"use client";
-
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import LogoutIcon from "@mui/icons-material/Logout";
-import {
-  AppBar,
-  Avatar,
-  Box,
-  Button,
-  Divider,
-  Stack,
-  Toolbar,
-  Typography,
-} from "@mui/material";
+import { AppBar, Avatar, Box, Button, Divider, Stack, Toolbar, Typography } from "@mui/material";
 import { authService } from "@/api/auth/authService";
 import { authTokenStorage } from "@/api/httpClient";
 import { useAuthStore } from "@/stores/authStore";

@@ -94,14 +94,9 @@ export default function ProductCreatePage() {
     });
   };
 
-  const error =
-    createProductMutation.error ?? categoriesQuery.error ?? brandsQuery.error;
+  const error = createProductMutation.error ?? categoriesQuery.error ?? brandsQuery.error;
   const errorMessage =
-    error instanceof Error
-      ? error.message
-      : error
-        ? "상품 등록 중 오류가 발생했습니다."
-        : "";
+    error instanceof Error ? error.message : error ? "상품 등록 중 오류가 발생했습니다." : "";
   const isSubmitting = createProductMutation.isPending;
   const isLoadingCategories = categoriesQuery.isLoading;
   const isLoadingBrands = brandsQuery.isLoading;
@@ -118,12 +113,7 @@ export default function ProductCreatePage() {
       </Box>
 
       <Paper elevation={0} sx={{ border: 1, borderColor: "divider", p: 3 }}>
-        <Stack
-          component="form"
-          spacing={2.5}
-          sx={{ maxWidth: 900 }}
-          onSubmit={handleSubmit}
-        >
+        <Stack component="form" spacing={2.5} sx={{ maxWidth: 900 }} onSubmit={handleSubmit}>
           {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
 
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
@@ -170,10 +160,7 @@ export default function ProductCreatePage() {
             onChange={setBrandId}
           />
 
-          <ProductOptionEditor
-            disabled={isSubmitting}
-            onRowsChange={handleOptionRowsChange}
-          />
+          <ProductOptionEditor disabled={isSubmitting} onRowsChange={handleOptionRowsChange} />
 
           <Stack direction="row" justifyContent="flex-end" spacing={1}>
             <Button
@@ -184,11 +171,7 @@ export default function ProductCreatePage() {
               취소
             </Button>
             <Button disabled={isSubmitting} type="submit" variant="contained">
-              {isSubmitting ? (
-                <CircularProgress color="inherit" size={20} />
-              ) : (
-                "저장"
-              )}
+              {isSubmitting ? <CircularProgress color="inherit" size={20} /> : "저장"}
             </Button>
           </Stack>
         </Stack>

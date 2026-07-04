@@ -6,7 +6,7 @@ const decodeBase64Url = (value) => {
     atob(padded)
       .split("")
       .map((char) => `%${char.charCodeAt(0).toString(16).padStart(2, "0")}`)
-      .join(""),
+      .join("")
   );
 };
 

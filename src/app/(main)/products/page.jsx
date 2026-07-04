@@ -165,7 +165,7 @@ export default function ProductListPage() {
         width: 110,
       },
     ],
-    [],
+    []
   );
 
   const handleDeleteClick = async () => {
@@ -206,11 +206,7 @@ export default function ProductListPage() {
     categoriesQuery.error ??
     brandsQuery.error;
   const errorMessage =
-    error instanceof Error
-      ? error.message
-      : error
-        ? "상품 처리 중 오류가 발생했습니다."
-        : "";
+    error instanceof Error ? error.message : error ? "상품 처리 중 오류가 발생했습니다." : "";
   const isLoading = productsQuery.isLoading || productsQuery.isFetching;
   const isDeleting = deleteProductsMutation.isPending;
   const isFilterLoading = categoriesQuery.isLoading || brandsQuery.isLoading;
@@ -325,11 +321,7 @@ export default function ProductListPage() {
             </Select>
           </FormControl>
           <Stack direction="row" spacing={1}>
-            <Button
-              disabled={isFilterLoading}
-              type="submit"
-              variant="contained"
-            >
+            <Button disabled={isFilterLoading} type="submit" variant="contained">
               검색
             </Button>
             <Button

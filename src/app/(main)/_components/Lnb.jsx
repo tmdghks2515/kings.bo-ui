@@ -9,8 +9,6 @@ import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import WebIcon from "@mui/icons-material/Web";
 import {
-  Box,
-  Chip,
   Divider,
   Drawer,
   List,
@@ -21,6 +19,7 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
+import Image from "next/image";
 
 const menuItems = [
   {
@@ -75,14 +74,15 @@ export default function Lnb({ drawerWidth }) {
       }}
       variant="permanent"
     >
-      <Toolbar sx={{ minHeight: 64, px: 3 }}>
-        <Stack spacing={0.25}>
-          <Typography component="div" variant="h6" sx={{ fontWeight: 800 }}>
-            THE KINGS COMPANY
-          </Typography>
-          <Typography color="text.secondary" variant="caption">
-            Backoffice Management
-          </Typography>
+      <Toolbar sx={{ minHeight: 64, px: 2, py: 1 }}>
+        <Stack alignItems="center" justifyContent="center">
+          <Image
+            src="/logo/thekingslogo.png"
+            width={132}
+            height={32}
+            alt="THE KINGS"
+            style={{ height: "auto" }}
+          />
         </Stack>
       </Toolbar>
 
@@ -90,8 +90,7 @@ export default function Lnb({ drawerWidth }) {
 
       <List dense={false} sx={{ px: 1.5 }}>
         {menuItems.map((item) => {
-          const selected =
-            item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+          const selected = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
 
           return (
             <ListItemButton

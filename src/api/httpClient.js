@@ -1,8 +1,6 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
-const ACCESS_TOKEN_KEY =
-  process.env.NEXT_PUBLIC_ACCESS_TOKEN_KEY ?? "kings.bo.accessToken";
-const TOKEN_TYPE_KEY =
-  process.env.NEXT_PUBLIC_TOKEN_TYPE_KEY ?? "kings.bo.tokenType";
+const ACCESS_TOKEN_KEY = process.env.NEXT_PUBLIC_ACCESS_TOKEN_KEY ?? "kings.bo.accessToken";
+const TOKEN_TYPE_KEY = process.env.NEXT_PUBLIC_TOKEN_TYPE_KEY ?? "kings.bo.tokenType";
 const TOKEN_EXPIRES_AT_KEY = `${ACCESS_TOKEN_KEY}.expiresAt`;
 const AUTH_STORE_KEY = "kings.bo.auth";
 const LOGIN_PATH = "/login";
@@ -64,8 +62,7 @@ const parseResponse = async (response) => {
 
 export const httpClient = {
   async request(path, { method = "GET", params, body, headers, ...options } = {}) {
-    const isFormData =
-      typeof FormData !== "undefined" && body instanceof FormData;
+    const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
     const response = await fetch(buildUrl(path, params), {
       method,
       headers: {
@@ -112,10 +109,7 @@ export const authTokenStorage = {
     window.localStorage.setItem(TOKEN_TYPE_KEY, tokenType);
 
     if (expiresIn) {
-      window.localStorage.setItem(
-        TOKEN_EXPIRES_AT_KEY,
-        String(Date.now() + expiresIn * 1000),
-      );
+      window.localStorage.setItem(TOKEN_EXPIRES_AT_KEY, String(Date.now() + expiresIn * 1000));
     }
   },
 

@@ -74,8 +74,8 @@ export default function ProductOptionEditor({
               ...row,
               [field]: value,
             }
-          : row,
-      ),
+          : row
+      )
     );
   };
 
@@ -145,9 +145,7 @@ export default function ProductOptionEditor({
                     </Tooltip>
                   </Stack>
                 </TableCell>
-                <TableCell sx={{ fontWeight: 700, width: 180 }}>
-                  옵션 유형
-                </TableCell>
+                <TableCell sx={{ fontWeight: 700, width: 180 }}>옵션 유형</TableCell>
                 <TableCell align="center" sx={{ fontWeight: 700, width: 80 }}>
                   삭제
                 </TableCell>
@@ -163,9 +161,7 @@ export default function ProductOptionEditor({
                       placeholder="옵션명을 입력하세요"
                       size="small"
                       value={row.name}
-                      onChange={(event) =>
-                        handleChange(row.id, "name", event.target.value)
-                      }
+                      onChange={(event) => handleChange(row.id, "name", event.target.value)}
                     />
                   </TableCell>
                   <TableCell>
@@ -177,9 +173,7 @@ export default function ProductOptionEditor({
                       size="small"
                       type="number"
                       value={row.price}
-                      onChange={(event) =>
-                        handleChange(row.id, "price", event.target.value)
-                      }
+                      onChange={(event) => handleChange(row.id, "price", event.target.value)}
                     />
                   </TableCell>
                   <TableCell>
@@ -190,9 +184,7 @@ export default function ProductOptionEditor({
                         label="유형"
                         labelId={`option-type-${row.id}`}
                         value={row.type}
-                        onChange={(event) =>
-                          handleChange(row.id, "type", event.target.value)
-                        }
+                        onChange={(event) => handleChange(row.id, "type", event.target.value)}
                       >
                         {optionTypes.map((type) => (
                           <MenuItem key={type.value} value={type.value}>

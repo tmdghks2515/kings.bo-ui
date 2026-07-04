@@ -74,8 +74,7 @@ const normalizeImageLinkRows = (items = [], withText = false) =>
   (Array.isArray(items) ? items : []).map((item) => ({
     id: crypto.randomUUID(),
     imageStorageKey: item.imageStorageKey ?? item.imageUrl ?? "",
-    originalName:
-      item.originalName ?? item.imageStorageKey ?? item.imageUrl ?? "",
+    originalName: item.originalName ?? item.imageStorageKey ?? item.imageUrl ?? "",
     link: item.link ?? createLink(),
     ...(withText
       ? {
@@ -156,18 +155,14 @@ export const toCurationDetailPayload = (type, state) => {
     return {
       type: detailType,
       title: String(state.title ?? "").trim(),
-      productCodes: state.productCodes
-        .map((row) => row.productCode.trim())
-        .filter(Boolean),
+      productCodes: state.productCodes.map((row) => row.productCode.trim()).filter(Boolean),
     };
   }
   if (type === "CATEGORY_PRODUCTS") {
     return {
       type: detailType,
       categoryId: state.categoryId ? Number(state.categoryId) : null,
-      productCodes: state.productCodes
-        .map((row) => row.productCode.trim())
-        .filter(Boolean),
+      productCodes: state.productCodes.map((row) => row.productCode.trim()).filter(Boolean),
     };
   }
 
@@ -307,35 +302,23 @@ function ImageLinkRows({
           disabled={disabled}
           startIcon={<AddIcon fontSize="small" />}
           variant="outlined"
-          onClick={() =>
-            onChange([...rows, createImageLinkRow(type !== "CATEGORIES")])
-          }
+          onClick={() => onChange([...rows, createImageLinkRow(type !== "CATEGORIES")])}
         >
           항목 추가
         </Button>
       </Stack>
 
       {rows.map((row, index) => (
-        <Paper
-          key={row.id}
-          elevation={0}
-          sx={{ border: 1, borderColor: "divider", p: 2 }}
-        >
+        <Paper key={row.id} elevation={0} sx={{ border: 1, borderColor: "divider", p: 2 }}>
           <Stack spacing={2}>
-            <Stack
-              alignItems="center"
-              direction="row"
-              justifyContent="space-between"
-            >
+            <Stack alignItems="center" direction="row" justifyContent="space-between">
               <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                 항목 {index + 1}
               </Typography>
               <IconButton
                 color="error"
                 disabled={disabled || rows.length <= 1}
-                onClick={() =>
-                  onChange(rows.filter((item) => item.id !== row.id))
-                }
+                onClick={() => onChange(rows.filter((item) => item.id !== row.id))}
               >
                 <DeleteIcon fontSize="small" />
               </IconButton>
@@ -344,7 +327,6 @@ function ImageLinkRows({
             {showTextFields ? (
               <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                 <TextField
-                  required
                   disabled={disabled}
                   fullWidth
                   label="타이틀"
@@ -357,7 +339,6 @@ function ImageLinkRows({
                   }
                 />
                 <TextField
-                  required
                   disabled={disabled}
                   fullWidth
                   label="설명"
@@ -389,9 +370,7 @@ function ImageLinkRows({
               disabled={disabled}
               products={products}
               value={row.link}
-              onChange={(link) =>
-                handleRowChange(row.id, (item) => ({ ...item, link }))
-              }
+              onChange={(link) => handleRowChange(row.id, (item) => ({ ...item, link }))}
             />
           </Stack>
         </Paper>
@@ -423,14 +402,11 @@ function ImageUploadInput({ disabled, value, onChange }) {
 
       onChange({
         imageStorageKey: uploadedFile.storageKey,
-        originalName:
-          uploadedFile.originalName ?? file.name ?? uploadedFile.storageKey,
+        originalName: uploadedFile.originalName ?? file.name ?? uploadedFile.storageKey,
       });
     } catch (error) {
       setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "이미지 업로드 중 오류가 발생했습니다.",
+        error instanceof Error ? error.message : "이미지 업로드 중 오류가 발생했습니다."
       );
     } finally {
       setIsUploading(false);
@@ -550,9 +526,7 @@ function LinkEditor({ brands, categories, disabled, products, value, onChange })
             label="브랜드"
             labelId="brand-link-label"
             value={value.brandId ?? ""}
-            onChange={(event) =>
-              onChange({ type: linkType, brandId: event.target.value })
-            }
+            onChange={(event) => onChange({ type: linkType, brandId: event.target.value })}
           >
             <MenuItem value="">선택</MenuItem>
             {brands.map((brand) => (
@@ -601,11 +575,7 @@ function ProductCodeRows({ disabled, products, rows, onChange }) {
             products={products}
             value={row.productCode}
             onChange={(productCode) =>
-              onChange(
-                rows.map((item) =>
-                  item.id === row.id ? { ...item, productCode } : item,
-                ),
-              )
+              onChange(rows.map((item) => (item.id === row.id ? { ...item, productCode } : item)))
             }
           />
           <IconButton
@@ -670,8 +640,5 @@ function CategorySelect({ categories, disabled, value, onChange }) {
 const flattenCategories = (categories, prefix = "") =>
   categories.flatMap((category) => {
     const label = prefix ? `${prefix} > ${category.name}` : category.name;
-    return [
-      { id: category.id, label },
-      ...flattenCategories(category.children ?? [], label),
-    ];
+    return [{ id: category.id, label }, ...flattenCategories(category.children ?? [], label)];
   });

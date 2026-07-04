@@ -3,14 +3,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DataGrid } from "@mui/x-data-grid";
-import {
-  Alert,
-  Box,
-  Link,
-  Paper,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Alert, Box, Link, Paper, Stack, Typography } from "@mui/material";
 import { displayService } from "@/api/display/displayService";
 
 const displayKeys = {
@@ -51,7 +44,7 @@ export default function DisplayListPage() {
         width: 120,
       },
     ],
-    [],
+    []
   );
 
   const error = displaysQuery.error;

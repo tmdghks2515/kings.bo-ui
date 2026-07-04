@@ -119,7 +119,7 @@ export default function UserListPage() {
         valueFormatter: (value) => formatDateTime(value),
       },
     ],
-    [],
+    []
   );
 
   const handleDeleteClick = async () => {
@@ -140,11 +140,7 @@ export default function UserListPage() {
 
   const error = deleteUsersMutation.error ?? usersQuery.error;
   const errorMessage =
-    error instanceof Error
-      ? error.message
-      : error
-        ? "사용자 처리 중 오류가 발생했습니다."
-        : "";
+    error instanceof Error ? error.message : error ? "사용자 처리 중 오류가 발생했습니다." : "";
   const isLoading = usersQuery.isLoading || usersQuery.isFetching;
   const isDeleting = deleteUsersMutation.isPending;
   const selectedCount = rowSelectionModel.length;

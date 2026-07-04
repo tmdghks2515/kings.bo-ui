@@ -73,11 +73,7 @@ export default function UserCreatePage() {
 
   const error = createUserMutation.error;
   const errorMessage =
-    error instanceof Error
-      ? error.message
-      : error
-        ? "사용자 생성 중 오류가 발생했습니다."
-        : "";
+    error instanceof Error ? error.message : error ? "사용자 생성 중 오류가 발생했습니다." : "";
   const isSubmitting = createUserMutation.isPending;
 
   return (
@@ -92,12 +88,7 @@ export default function UserCreatePage() {
       </Box>
 
       <Paper elevation={0} sx={{ border: 1, borderColor: "divider", p: 3 }}>
-        <Stack
-          component="form"
-          spacing={2.5}
-          sx={{ maxWidth: 760 }}
-          onSubmit={handleSubmit}
-        >
+        <Stack component="form" spacing={2.5} sx={{ maxWidth: 760 }} onSubmit={handleSubmit}>
           {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
           {passwordError ? <Alert severity="error">{passwordError}</Alert> : null}
           {roleError ? <Alert severity="error">{roleError}</Alert> : null}
@@ -194,19 +185,11 @@ export default function UserCreatePage() {
           />
 
           <Stack direction="row" justifyContent="flex-end" spacing={1}>
-            <Button
-              color="inherit"
-              disabled={isSubmitting}
-              onClick={() => router.push("/users")}
-            >
+            <Button color="inherit" disabled={isSubmitting} onClick={() => router.push("/users")}>
               취소
             </Button>
             <Button disabled={isSubmitting} type="submit" variant="contained">
-              {isSubmitting ? (
-                <CircularProgress color="inherit" size={20} />
-              ) : (
-                "저장"
-              )}
+              {isSubmitting ? <CircularProgress color="inherit" size={20} /> : "저장"}
             </Button>
           </Stack>
         </Stack>

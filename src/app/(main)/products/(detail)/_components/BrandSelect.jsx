@@ -1,18 +1,8 @@
 "use client";
 
-import {
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-} from "@mui/material";
+import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 
-export default function BrandSelect({
-  brands = [],
-  disabled = false,
-  value,
-  onChange,
-}) {
+export default function BrandSelect({ brands = [], disabled = false, value, onChange }) {
   const brandOptions = Array.isArray(brands) ? brands : [];
 
   return (

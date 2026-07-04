@@ -20,6 +20,7 @@ import {
 import { authService } from "@/api/auth/authService";
 import { authTokenStorage } from "@/api/httpClient";
 import { useAuthStore } from "@/stores/authStore";
+import Image from "next/image";
 
 const SAVED_USERNAME_KEY = "kings.bo.savedUsername";
 
@@ -86,14 +87,25 @@ export default function LoginPage() {
     >
       <Container maxWidth="xs">
         <Stack spacing={3}>
-          <Box>
-            <Typography component="h1" variant="h4" sx={{ fontWeight: 900 }}>
-              KINGS
-            </Typography>
+          <Stack alignItems="center">
+            <Image
+              src="/logo/thekingsimg.png"
+              width={180}
+              height={32}
+              alt="THE KINGS"
+              style={{ height: "auto" }}
+            />
+            <Image
+              src="/logo/thekingslogo.png"
+              width={250}
+              height={32}
+              alt="THE KINGS"
+              style={{ height: "auto" }}
+            />
             <Typography color="text.secondary" sx={{ mt: 0.75 }} variant="body2">
-              관리자 계정으로 로그인하세요.
+              Backoffice Management
             </Typography>
-          </Box>
+          </Stack>
 
           <Paper
             elevation={0}
@@ -129,29 +141,19 @@ export default function LoginPage() {
                 type="password"
               />
 
-              <Stack
-                alignItems="center"
-                direction="row"
-                justifyContent="space-between"
-                spacing={1}
-              >
+              <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={1}>
                 <FormControlLabel
                   control={
                     <Checkbox
                       checked={rememberUsername}
                       disabled={isSubmitting}
                       size="small"
-                      onChange={(event) =>
-                        setRememberUsername(event.target.checked)
-                      }
+                      onChange={(event) => setRememberUsername(event.target.checked)}
                     />
                   }
                   label="아이디 저장"
                   sx={{ mr: 0 }}
                 />
-                <Link href="#" underline="hover" variant="body2">
-                  비밀번호 찾기
-                </Link>
               </Stack>
 
               <Button
@@ -161,11 +163,7 @@ export default function LoginPage() {
                 type="submit"
                 variant="contained"
               >
-                {isSubmitting ? (
-                  <CircularProgress color="inherit" size={20} />
-                ) : (
-                  "로그인"
-                )}
+                {isSubmitting ? <CircularProgress color="inherit" size={20} /> : "로그인"}
               </Button>
             </Stack>
           </Paper>

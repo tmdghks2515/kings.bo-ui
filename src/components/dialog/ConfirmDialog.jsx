@@ -40,11 +40,7 @@ export default function ConfirmDialog({
         </Stack>
       </DialogTitle>
       <DialogContent>
-        {typeof content === "string" ? (
-          <DialogContentText>{content}</DialogContentText>
-        ) : (
-          content
-        )}
+        {typeof content === "string" ? <DialogContentText>{content}</DialogContentText> : content}
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button color="inherit" onClick={onCancel}>

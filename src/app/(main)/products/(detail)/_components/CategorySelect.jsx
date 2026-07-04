@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-} from "@mui/material";
+import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 
 const flattenCategories = (categories, prefix = "") =>
   categories.flatMap((category) => {
@@ -15,18 +10,10 @@ const flattenCategories = (categories, prefix = "") =>
       label,
     };
 
-    return [
-      item,
-      ...flattenCategories(category.children ?? [], label),
-    ];
+    return [item, ...flattenCategories(category.children ?? [], label)];
   });
 
-export default function CategorySelect({
-  categories = [],
-  disabled = false,
-  value,
-  onChange,
-}) {
+export default function CategorySelect({ categories = [], disabled = false, value, onChange }) {
   const categoryOptions = flattenCategories(Array.isArray(categories) ? categories : []);
 
   return (

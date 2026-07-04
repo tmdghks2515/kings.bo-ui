@@ -52,11 +52,7 @@ export default function BrandCreatePage() {
 
   const error = createBrandMutation.error;
   const errorMessage =
-    error instanceof Error
-      ? error.message
-      : error
-        ? "브랜드 등록 중 오류가 발생했습니다."
-        : "";
+    error instanceof Error ? error.message : error ? "브랜드 등록 중 오류가 발생했습니다." : "";
   const isSubmitting = createBrandMutation.isPending;
 
   return (
@@ -71,12 +67,7 @@ export default function BrandCreatePage() {
       </Box>
 
       <Paper elevation={0} sx={{ border: 1, borderColor: "divider", p: 3 }}>
-        <Stack
-          component="form"
-          spacing={2.5}
-          sx={{ maxWidth: 760 }}
-          onSubmit={handleSubmit}
-        >
+        <Stack component="form" spacing={2.5} sx={{ maxWidth: 760 }} onSubmit={handleSubmit}>
           {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
 
           <TextField
@@ -122,19 +113,11 @@ export default function BrandCreatePage() {
           />
 
           <Stack direction="row" justifyContent="flex-end" spacing={1}>
-            <Button
-              color="inherit"
-              disabled={isSubmitting}
-              onClick={() => router.push("/brands")}
-            >
+            <Button color="inherit" disabled={isSubmitting} onClick={() => router.push("/brands")}>
               취소
             </Button>
             <Button disabled={isSubmitting} type="submit" variant="contained">
-              {isSubmitting ? (
-                <CircularProgress color="inherit" size={20} />
-              ) : (
-                "저장"
-              )}
+              {isSubmitting ? <CircularProgress color="inherit" size={20} /> : "저장"}
             </Button>
           </Stack>
         </Stack>

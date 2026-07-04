@@ -26,8 +26,7 @@ const toImage = (fileResource, fallbackFile) => {
 
   return {
     storageKey: fileResource.storageKey,
-    originalName:
-      fileResource.originalName ?? fallbackFile?.name ?? fileResource.storageKey,
+    originalName: fileResource.originalName ?? fallbackFile?.name ?? fileResource.storageKey,
     contentType: fileResource.contentType ?? fallbackFile?.type ?? "",
     extension: fileResource.extension ?? "",
     sizeBytes: fileResource.sizeBytes ?? fallbackFile?.size ?? 0,
@@ -70,9 +69,7 @@ export default function BrandImageInput({
       onChange(toImage(uploadedFile, file));
     } catch (error) {
       setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "이미지 업로드 중 오류가 발생했습니다.",
+        error instanceof Error ? error.message : "이미지 업로드 중 오류가 발생했습니다."
       );
     } finally {
       setIsUploading(false);

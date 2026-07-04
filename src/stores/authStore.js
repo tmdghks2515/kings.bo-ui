@@ -51,6 +51,6 @@ export const useAuthStore = create(
         user: state.user,
       }),
       storage: createJSONStorage(() => localStorage),
-    },
-  ),
+    }
+  )
 );
