@@ -10,8 +10,6 @@ import {
   CircularProgress,
   Paper,
   Stack,
-  Tab,
-  Tabs,
   TextField,
   Typography,
 } from "@mui/material";
@@ -98,7 +96,6 @@ export default function ProductDetailPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { productId } = useParams();
-  const [activeTab, setActiveTab] = useState("basic");
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -175,11 +172,6 @@ export default function ProductDetailPage() {
     updateProductMutation.mutate(buildPayload());
   };
 
-  const handleImageSave = () => {
-    updateProductMutation.reset();
-    updateProductMutation.mutate(buildPayload());
-  };
-
   const error =
     updateProductMutation.error ?? productQuery.error ?? categoriesQuery.error ?? brandsQuery.error;
   const errorMessage =
@@ -202,105 +194,73 @@ export default function ProductDetailPage() {
 
       {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
 
-      <Paper elevation={0} sx={{ border: 1, borderColor: "divider" }}>
-        <Tabs
-          value={activeTab}
-          sx={{ borderBottom: 1, borderColor: "divider", px: 2 }}
-          onChange={(_, value) => setActiveTab(value)}
-        >
-          <Tab label="기본정보" value="basic" />
-          <Tab label="이미지" value="images" />
-        </Tabs>
+      <Paper elevation={0} sx={{ border: 1, borderColor: "divider", p: 3 }}>
+        <Stack component="form" spacing={2.5} sx={{ maxWidth: 900 }} onSubmit={handleSubmit}>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <TextField disabled fullWidth label="상품 코드" value={productId ?? ""} />
+            <TextField
+              required
+              disabled={isLoading || isSubmitting}
+              fullWidth
+              label="상품명"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+            />
+          </Stack>
 
-        <Box sx={{ p: 3 }}>
-          {activeTab === "basic" ? (
-            <Stack component="form" spacing={2.5} sx={{ maxWidth: 900 }} onSubmit={handleSubmit}>
-              <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                <TextField disabled fullWidth label="상품 코드" value={productId ?? ""} />
-                <TextField
-                  required
-                  disabled={isLoading || isSubmitting}
-                  fullWidth
-                  label="상품명"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                />
-              </Stack>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <TextField
+              disabled={isLoading || isSubmitting}
+              fullWidth
+              inputProps={{ min: 0 }}
+              label="판매가"
+              placeholder="0"
+              type="number"
+              value={price}
+              onChange={(event) => setPrice(event.target.value)}
+            />
+            <CategorySelect
+              categories={categoriesQuery.data ?? []}
+              disabled={isLoading || isSubmitting || isLoadingCategories}
+              value={categoryId}
+              onChange={setCategoryId}
+            />
+          </Stack>
 
-              <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                <TextField
-                  disabled={isLoading || isSubmitting}
-                  fullWidth
-                  inputProps={{ min: 0 }}
-                  label="판매가"
-                  placeholder="0"
-                  type="number"
-                  value={price}
-                  onChange={(event) => setPrice(event.target.value)}
-                />
-                <CategorySelect
-                  categories={categoriesQuery.data ?? []}
-                  disabled={isLoading || isSubmitting || isLoadingCategories}
-                  value={categoryId}
-                  onChange={setCategoryId}
-                />
-              </Stack>
+          <BrandSelect
+            brands={brandsQuery.data ?? []}
+            disabled={isLoading || isSubmitting || isLoadingBrands}
+            value={brandId}
+            onChange={setBrandId}
+          />
 
-              <BrandSelect
-                brands={brandsQuery.data ?? []}
-                disabled={isLoading || isSubmitting || isLoadingBrands}
-                value={brandId}
-                onChange={setBrandId}
-              />
+          <ProductOptionEditor
+            disabled={isLoading || isSubmitting}
+            initialRows={initialOptionRows}
+            onRowsChange={handleOptionRowsChange}
+          />
 
-              <ProductOptionEditor
-                disabled={isLoading || isSubmitting}
-                initialRows={initialOptionRows}
-                onRowsChange={handleOptionRowsChange}
-              />
+          <ProductImageEditor
+            detailImages={detailImages}
+            disabled={isLoading || isSubmitting}
+            images={images}
+            onDetailImagesChange={setDetailImages}
+            onImagesChange={setImages}
+          />
 
-              <Stack direction="row" justifyContent="flex-end" spacing={1}>
-                <Button
-                  color="inherit"
-                  disabled={isSubmitting}
-                  onClick={() => router.push("/products")}
-                >
-                  목록
-                </Button>
-                <Button disabled={isLoading || isSubmitting} type="submit" variant="contained">
-                  {isSubmitting ? <CircularProgress color="inherit" size={20} /> : "저장"}
-                </Button>
-              </Stack>
-            </Stack>
-          ) : (
-            <Stack spacing={2.5}>
-              <ProductImageEditor
-                detailImages={detailImages}
-                disabled={isLoading || isSubmitting}
-                images={images}
-                onDetailImagesChange={setDetailImages}
-                onImagesChange={setImages}
-              />
-
-              <Stack direction="row" justifyContent="flex-end" spacing={1}>
-                <Button
-                  color="inherit"
-                  disabled={isSubmitting}
-                  onClick={() => router.push("/products")}
-                >
-                  목록
-                </Button>
-                <Button
-                  disabled={isLoading || isSubmitting}
-                  variant="contained"
-                  onClick={handleImageSave}
-                >
-                  {isSubmitting ? <CircularProgress color="inherit" size={20} /> : "저장"}
-                </Button>
-              </Stack>
-            </Stack>
-          )}
-        </Box>
+          <Stack direction="row" justifyContent="flex-end" spacing={1}>
+            <Button
+              color="inherit"
+              disabled={isSubmitting}
+              onClick={() => router.push("/products")}
+            >
+              목록
+            </Button>
+            <Button disabled={isLoading || isSubmitting} type="submit" variant="contained">
+              {isSubmitting ? <CircularProgress color="inherit" size={20} /> : "저장"}
+            </Button>
+          </Stack>
+        </Stack>
       </Paper>
     </Stack>
   );

@@ -18,6 +18,7 @@ import { categoryService } from "@/api/category/categoryService";
 import { productService } from "@/api/product/productService";
 import BrandSelect from "@/app/(main)/products/(detail)/_components/BrandSelect";
 import CategorySelect from "@/app/(main)/products/(detail)/_components/CategorySelect";
+import ProductImageEditor from "@/app/(main)/products/(detail)/_components/ProductImageEditor";
 import ProductOptionEditor from "@/app/(main)/products/(detail)/_components/ProductOptionEditor";
 
 const productKeys = {
@@ -49,12 +50,22 @@ const toOptionPayload = (options) =>
     }))
     .filter((option) => option.name);
 
+const toImagePayload = (images) =>
+  images.map((image) => ({
+    imageStorageKey: image.storageKey,
+    main: Boolean(image.main),
+  }));
+
+const toDetailImagePayload = (images) => images.map((image) => image.storageKey);
+
 export default function ProductCreatePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [categoryId, setCategoryId] = useState("");
   const [brandId, setBrandId] = useState("");
   const [options, setOptions] = useState([]);
+  const [images, setImages] = useState([]);
+  const [detailImages, setDetailImages] = useState([]);
 
   const categoriesQuery = useQuery({
     queryKey: categoryKeys.all,
@@ -91,6 +102,8 @@ export default function ProductCreatePage() {
       categoryId: toNumberOrNull(categoryId),
       brandId: toNumberOrNull(brandId),
       options: toOptionPayload(options),
+      images: toImagePayload(images),
+      detailImages: toDetailImagePayload(detailImages),
     });
   };
 
@@ -161,6 +174,14 @@ export default function ProductCreatePage() {
           />
 
           <ProductOptionEditor disabled={isSubmitting} onRowsChange={handleOptionRowsChange} />
+
+          <ProductImageEditor
+            detailImages={detailImages}
+            disabled={isSubmitting}
+            images={images}
+            onDetailImagesChange={setDetailImages}
+            onImagesChange={setImages}
+          />
 
           <Stack direction="row" justifyContent="flex-end" spacing={1}>
             <Button

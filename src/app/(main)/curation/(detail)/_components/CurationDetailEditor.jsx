@@ -70,19 +70,39 @@ const createProductCodeRow = (productCode = "") => ({
   productCode,
 });
 
+const getImageResource = (item) => {
+  if (item?.image && typeof item.image === "object") {
+    return item.image;
+  }
+  if (item?.imageStorageKey && typeof item.imageStorageKey === "object") {
+    return item.imageStorageKey;
+  }
+  return null;
+};
+
+const getImageStorageKey = (item) => {
+  const image = getImageResource(item);
+  return image?.storageKey ?? item.imageStorageKey ?? item.imageUrl ?? "";
+};
+
 const normalizeImageLinkRows = (items = [], withText = false) =>
-  (Array.isArray(items) ? items : []).map((item) => ({
-    id: crypto.randomUUID(),
-    imageStorageKey: item.imageStorageKey ?? item.imageUrl ?? "",
-    originalName: item.originalName ?? item.imageStorageKey ?? item.imageUrl ?? "",
-    link: item.link ?? createLink(),
-    ...(withText
-      ? {
-          title: item.title ?? "",
-          description: item.description ?? "",
-        }
-      : {}),
-  }));
+  (Array.isArray(items) ? items : []).map((item) => {
+    const image = getImageResource(item);
+    const imageStorageKey = getImageStorageKey(item);
+
+    return {
+      id: crypto.randomUUID(),
+      imageStorageKey,
+      originalName: item.originalName ?? image?.originalName ?? imageStorageKey,
+      link: item.link ?? createLink(),
+      ...(withText
+        ? {
+            title: item.title ?? "",
+            description: item.description ?? "",
+          }
+        : {}),
+    };
+  });
 
 const normalizeProductCodeRows = (productCodes = []) =>
   (Array.isArray(productCodes) ? productCodes : []).map(createProductCodeRow);
