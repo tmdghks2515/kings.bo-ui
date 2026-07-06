@@ -89,14 +89,14 @@ export default function LoginPage() {
         <Stack spacing={3}>
           <Stack alignItems="center">
             <Image
-              src="/logo/thekingsimg.png"
+              src="/logo/thekingslogo2.png"
               width={180}
               height={32}
               alt="THE KINGS"
               style={{ height: "auto" }}
             />
             <Image
-              src="/logo/thekingslogo.png"
+              src="/logo/thekingstextlogo.png"
               width={250}
               height={32}
               alt="THE KINGS"

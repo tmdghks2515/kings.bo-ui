@@ -77,7 +77,7 @@ export default function Lnb({ drawerWidth }) {
       <Toolbar sx={{ minHeight: 64, px: 2, py: 1 }}>
         <Stack alignItems="center" justifyContent="center">
           <Image
-            src="/logo/thekingslogo.png"
+            src="/logo/thekingstextlogo.png"
             width={132}
             height={32}
             alt="THE KINGS"
