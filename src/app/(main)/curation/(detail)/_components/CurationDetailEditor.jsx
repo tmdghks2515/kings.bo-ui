@@ -9,6 +9,7 @@ import {
   Alert,
   Box,
   Button,
+  Checkbox,
   CircularProgress,
   FormControl,
   IconButton,
@@ -31,7 +32,8 @@ const DETAIL_TYPE_BY_CURATION_TYPE = {
   NORMAL_BANNER: "NormalBannerDetail",
   CATEGORIES: "CategoriesDetail",
   TITLED_PRODUCTS: "TitledProductsDetail",
-  CATEGORY_PRODUCTS: "CategoryProductsDetail",
+  IMAGE_PRODUCTS: "ImageProductsDetail",
+  BRAND_SHORTCUTS: "BrandShortcutsDetail",
 };
 
 const curationTypeLabels = {
@@ -39,7 +41,8 @@ const curationTypeLabels = {
   NORMAL_BANNER: "일반 배너",
   CATEGORIES: "카테고리",
   TITLED_PRODUCTS: "타이틀 상품",
-  CATEGORY_PRODUCTS: "카테고리 상품",
+  IMAGE_PRODUCTS: "이미지 상품",
+  BRAND_SHORTCUTS: "브랜드 바로가기",
 };
 
 const linkTypeLabels = {
@@ -107,6 +110,9 @@ const normalizeImageLinkRows = (items = [], withText = false) =>
 const normalizeProductCodeRows = (productCodes = []) =>
   (Array.isArray(productCodes) ? productCodes : []).map(createProductCodeRow);
 
+const normalizeBrandIds = (brandIds = []) =>
+  (Array.isArray(brandIds) ? brandIds : []).map((brandId) => String(brandId));
+
 export const createInitialDetailState = (type) => {
   if (type === "TITLED_PRODUCTS") {
     return {
@@ -114,10 +120,18 @@ export const createInitialDetailState = (type) => {
       productCodes: [createProductCodeRow()],
     };
   }
-  if (type === "CATEGORY_PRODUCTS") {
+  if (type === "IMAGE_PRODUCTS") {
     return {
-      categoryId: "",
+      imageStorageKey: "",
+      link: createLink(),
+      title: "",
+      subTitle: "",
       productCodes: [createProductCodeRow()],
+    };
+  }
+  if (type === "BRAND_SHORTCUTS") {
+    return {
+      brandIds: [],
     };
   }
 
@@ -137,10 +151,22 @@ export const toDetailState = (type, detail) => {
       productCodes: normalizeProductCodeRows(detail.productCodes),
     };
   }
-  if (type === "CATEGORY_PRODUCTS") {
+  if (type === "IMAGE_PRODUCTS") {
+    const image = getImageResource(detail);
+    const imageStorageKey = getImageStorageKey(detail);
+
     return {
-      categoryId: detail.categoryId ?? "",
+      imageStorageKey,
+      originalName: detail.originalName ?? image?.originalName ?? imageStorageKey,
+      link: detail.link ?? createLink(),
+      title: detail.title ?? "",
+      subTitle: detail.subTitle ?? "",
       productCodes: normalizeProductCodeRows(detail.productCodes),
+    };
+  }
+  if (type === "BRAND_SHORTCUTS") {
+    return {
+      brandIds: normalizeBrandIds(detail.brandIds),
     };
   }
 
@@ -178,11 +204,20 @@ export const toCurationDetailPayload = (type, state) => {
       productCodes: state.productCodes.map((row) => row.productCode.trim()).filter(Boolean),
     };
   }
-  if (type === "CATEGORY_PRODUCTS") {
+  if (type === "IMAGE_PRODUCTS") {
     return {
       type: detailType,
-      categoryId: state.categoryId ? Number(state.categoryId) : null,
+      imageStorageKey: state.imageStorageKey.trim(),
+      link: cleanLink(state.link),
+      title: String(state.title ?? "").trim(),
+      subTitle: String(state.subTitle ?? "").trim(),
       productCodes: state.productCodes.map((row) => row.productCode.trim()).filter(Boolean),
+    };
+  }
+  if (type === "BRAND_SHORTCUTS") {
+    return {
+      type: detailType,
+      brandIds: state.brandIds.map(Number),
     };
   }
 
@@ -242,14 +277,38 @@ export default function CurationDetailEditor({
     );
   }
 
-  if (type === "CATEGORY_PRODUCTS") {
+  if (type === "IMAGE_PRODUCTS") {
     return (
       <Stack spacing={2}>
-        <CategorySelect
+        <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+          <TextField
+            required
+            disabled={disabled}
+            fullWidth
+            label="타이틀"
+            value={value.title}
+            onChange={(event) => onChange({ ...value, title: event.target.value })}
+          />
+          <TextField
+            disabled={disabled}
+            fullWidth
+            label="서브 타이틀"
+            value={value.subTitle}
+            onChange={(event) => onChange({ ...value, subTitle: event.target.value })}
+          />
+        </Stack>
+        <ImageUploadInput
+          disabled={disabled}
+          value={value}
+          onChange={(image) => onChange({ ...value, ...image })}
+        />
+        <LinkEditor
+          brands={brandOptions}
           categories={categoryOptions}
           disabled={disabled}
-          value={value.categoryId}
-          onChange={(categoryId) => onChange({ ...value, categoryId })}
+          products={productOptions}
+          value={value.link}
+          onChange={(link) => onChange({ ...value, link })}
         />
         <ProductCodeRows
           disabled={disabled}
@@ -258,6 +317,17 @@ export default function CurationDetailEditor({
           onChange={(productCodes) => onChange({ ...value, productCodes })}
         />
       </Stack>
+    );
+  }
+
+  if (type === "BRAND_SHORTCUTS") {
+    return (
+      <BrandShortcutSelect
+        brands={brandOptions}
+        disabled={disabled}
+        value={value.brandIds}
+        onChange={(brandIds) => onChange({ ...value, brandIds })}
+      />
     );
   }
 
@@ -628,6 +698,42 @@ function ProductCodeSelect({ disabled, products, value, onChange }) {
             {product.name ? `${product.code} - ${product.name}` : product.code}
           </MenuItem>
         ))}
+      </Select>
+    </FormControl>
+  );
+}
+
+function BrandShortcutSelect({ brands, disabled, value, onChange }) {
+  const selectedBrandIds = Array.isArray(value) ? value : [];
+  const brandNameById = new Map(brands.map((brand) => [String(brand.id), brand.name]));
+
+  return (
+    <FormControl fullWidth>
+      <InputLabel id="brand-shortcut-label">노출 브랜드</InputLabel>
+      <Select
+        multiple
+        disabled={disabled}
+        label="노출 브랜드"
+        labelId="brand-shortcut-label"
+        value={selectedBrandIds}
+        renderValue={(selected) =>
+          selected.map((brandId) => brandNameById.get(String(brandId)) ?? brandId).join(", ")
+        }
+        onChange={(event) => {
+          const nextValue = event.target.value;
+          onChange(typeof nextValue === "string" ? nextValue.split(",") : nextValue);
+        }}
+      >
+        {brands.map((brand) => {
+          const brandId = String(brand.id);
+
+          return (
+            <MenuItem key={brand.id} value={brandId}>
+              <Checkbox checked={selectedBrandIds.includes(brandId)} />
+              <ListItemText primary={brand.name} />
+            </MenuItem>
+          );
+        })}
       </Select>
     </FormControl>
   );
