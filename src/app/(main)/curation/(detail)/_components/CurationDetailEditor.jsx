@@ -61,11 +61,10 @@ const createLink = (type = "ProductDetailLink") => {
   return { type: "ProductDetailLink", productCode: "" };
 };
 
-const createImageLinkRow = (withText = false) => ({
+const createImageLinkRow = () => ({
   id: crypto.randomUUID(),
   imageStorageKey: "",
   link: createLink(),
-  ...(withText ? { title: "", description: "" } : {}),
 });
 
 const createProductCodeRow = (productCode = "") => ({
@@ -88,7 +87,7 @@ const getImageStorageKey = (item) => {
   return image?.storageKey ?? item.imageStorageKey ?? item.imageUrl ?? "";
 };
 
-const normalizeImageLinkRows = (items = [], withText = false) =>
+const normalizeImageLinkRows = (items = []) =>
   (Array.isArray(items) ? items : []).map((item) => {
     const image = getImageResource(item);
     const imageStorageKey = getImageStorageKey(item);
@@ -98,12 +97,6 @@ const normalizeImageLinkRows = (items = [], withText = false) =>
       imageStorageKey,
       originalName: item.originalName ?? image?.originalName ?? imageStorageKey,
       link: item.link ?? createLink(),
-      ...(withText
-        ? {
-            title: item.title ?? "",
-            description: item.description ?? "",
-          }
-        : {}),
     };
   });
 
@@ -136,7 +129,7 @@ export const createInitialDetailState = (type) => {
   }
 
   return {
-    items: [createImageLinkRow(type !== "CATEGORIES")],
+    items: [createImageLinkRow()],
   };
 };
 
@@ -171,7 +164,7 @@ export const toDetailState = (type, detail) => {
   }
 
   return {
-    items: normalizeImageLinkRows(detail.items, type !== "CATEGORIES"),
+    items: normalizeImageLinkRows(detail.items),
   };
 };
 
@@ -227,12 +220,6 @@ export const toCurationDetailPayload = (type, state) => {
       .map((row) => ({
         imageStorageKey: row.imageStorageKey.trim(),
         link: cleanLink(row.link),
-        ...(type !== "CATEGORIES"
-          ? {
-              title: row.title.trim(),
-              description: row.description.trim(),
-            }
-          : {}),
       }))
       .filter((row) => row.imageStorageKey),
   };
@@ -338,8 +325,6 @@ export default function CurationDetailEditor({
       disabled={disabled}
       products={productOptions}
       rows={value.items}
-      showTextFields={type !== "CATEGORIES"}
-      type={type}
       onChange={(items) => onChange({ ...value, items })}
     />
   );
@@ -374,8 +359,6 @@ function ImageLinkRows({
   disabled,
   products,
   rows,
-  showTextFields,
-  type,
   onChange,
 }) {
   const handleRowChange = (rowId, updater) => {
@@ -392,7 +375,7 @@ function ImageLinkRows({
           disabled={disabled}
           startIcon={<AddIcon fontSize="small" />}
           variant="outlined"
-          onClick={() => onChange([...rows, createImageLinkRow(type !== "CATEGORIES")])}
+          onClick={() => onChange([...rows, createImageLinkRow()])}
         >
           항목 추가
         </Button>
@@ -413,35 +396,6 @@ function ImageLinkRows({
                 <DeleteIcon fontSize="small" />
               </IconButton>
             </Stack>
-
-            {showTextFields ? (
-              <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                <TextField
-                  disabled={disabled}
-                  fullWidth
-                  label="타이틀"
-                  value={row.title}
-                  onChange={(event) =>
-                    handleRowChange(row.id, (item) => ({
-                      ...item,
-                      title: event.target.value,
-                    }))
-                  }
-                />
-                <TextField
-                  disabled={disabled}
-                  fullWidth
-                  label="설명"
-                  value={row.description}
-                  onChange={(event) =>
-                    handleRowChange(row.id, (item) => ({
-                      ...item,
-                      description: event.target.value,
-                    }))
-                  }
-                />
-              </Stack>
-            ) : null}
 
             <ImageUploadInput
               disabled={disabled}
