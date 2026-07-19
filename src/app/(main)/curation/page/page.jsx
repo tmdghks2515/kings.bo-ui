@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import NextLink from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { DataGrid } from "@mui/x-data-grid";
 import { Alert, Box, Link, Paper, Stack, Typography } from "@mui/material";
@@ -31,7 +32,11 @@ export default function DisplayListPage() {
         flex: 1,
         minWidth: 180,
         renderCell: (params) => (
-          <Link color="primary" href={`/curation/page/${params.row.id}`}>
+          <Link
+            color="primary"
+            component={NextLink}
+            href={`/curation/page/detail?curationPageId=${params.row.id}`}
+          >
             {params.value}
           </Link>
         ),

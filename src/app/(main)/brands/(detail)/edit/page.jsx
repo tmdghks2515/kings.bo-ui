@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Alert,
@@ -33,10 +33,11 @@ const toImage = (fileResource, storageKey) => {
   return storageKey ? { storageKey, originalName: storageKey } : null;
 };
 
-export default function BrandDetailPage() {
+function BrandDetailContent() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { brandId } = useParams();
+  const searchParams = useSearchParams();
+  const brandId = searchParams.get("brandId");
   const [name, setName] = useState("");
   const [introduce, setIntroduce] = useState("");
   const [sortOrder, setSortOrder] = useState(0);
@@ -160,5 +161,13 @@ export default function BrandDetailPage() {
         </Stack>
       </Paper>
     </Stack>
+  );
+}
+
+export default function BrandDetailPage() {
+  return (
+    <Suspense fallback={null}>
+      <BrandDetailContent />
+    </Suspense>
   );
 }

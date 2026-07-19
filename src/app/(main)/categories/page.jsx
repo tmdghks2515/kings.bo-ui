@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AddIcon from "@mui/icons-material/Add";
@@ -64,7 +65,11 @@ export default function CategoryListPage() {
         flex: 1,
         minWidth: 180,
         renderCell: (params) => (
-          <Link color="primary" href={`/categories/${params.row.id}`}>
+          <Link
+            color="primary"
+            component={NextLink}
+            href={`/categories/edit?categoryId=${params.row.id}`}
+          >
             {params.value}
           </Link>
         ),

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -72,7 +73,11 @@ export default function UserListPage() {
         flex: 0.8,
         minWidth: 180,
         renderCell: (params) => (
-          <Link color="primary" href={`/users/${encodeURIComponent(params.value)}`}>
+          <Link
+            color="primary"
+            component={NextLink}
+            href={`/users/edit?username=${encodeURIComponent(params.value)}`}
+          >
             {params.value}
           </Link>
         ),

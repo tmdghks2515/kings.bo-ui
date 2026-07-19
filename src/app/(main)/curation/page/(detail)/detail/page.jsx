@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { Suspense, useCallback, useMemo, useState } from "react";
+import NextLink from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -28,6 +29,14 @@ import { getCurationTypeLabel } from "@/app/(main)/curation/(detail)/_components
 const curationPageKeys = {
   all: ["displays"],
   detail: (curationPageId) => ["curation-pages", curationPageId],
+};
+
+const pageSizeOptions = [10, 25, 50];
+
+const dataGridInitialState = {
+  pagination: {
+    paginationModel: { page: 0, pageSize: 10 },
+  },
 };
 
 const getDetailSummary = (curation) => {
@@ -64,11 +73,12 @@ const normalizeCurations = (curations) =>
       detailSummary: getDetailSummary(curation),
     }));
 
-export default function CurationPageDetailPage() {
+function CurationPageDetailContent() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const confirm = useConfirm();
-  const { curationPageId } = useParams();
+  const searchParams = useSearchParams();
+  const curationPageId = searchParams.get("curationPageId");
   const [rowSelectionModel, setRowSelectionModel] = useState([]);
 
   const curationPageQuery = useQuery({
@@ -99,9 +109,24 @@ export default function CurationPageDetailPage() {
   });
 
   const curationPage = curationPageQuery.data;
-  const rows = normalizeCurations(curationPage?.curations);
+  const rows = useMemo(
+    () => normalizeCurations(curationPage?.curations),
+    [curationPage?.curations]
+  );
   const isLoading = curationPageQuery.isLoading || curationPageQuery.isFetching;
   const isMoving = updateSortOrdersMutation.isPending;
+
+  const handleRowSelectionModelChange = useCallback((newSelectionModel) => {
+    setRowSelectionModel((previousSelectionModel) => {
+      const isSameSelection =
+        previousSelectionModel.length === newSelectionModel.length &&
+        previousSelectionModel.every(
+          (selectedId, index) => selectedId === newSelectionModel[index]
+        );
+
+      return isSameSelection ? previousSelectionModel : newSelectionModel;
+    });
+  }, []);
 
   const handleMoveClick = (rowIndex, direction) => {
     updateSortOrdersMutation.reset();
@@ -173,7 +198,8 @@ export default function CurationPageDetailPage() {
         renderCell: (params) => (
           <Link
             color="primary"
-            href={`/curation/${params.row.id}?curationPageId=${curationPageId}`}
+            component={NextLink}
+            href={`/curation/edit?curationId=${params.row.id}&curationPageId=${curationPageId}`}
           >
             {params.value}
           </Link>
@@ -297,19 +323,21 @@ export default function CurationPageDetailPage() {
           disableRowSelectionOnClick
           columns={columns}
           loading={isLoading}
-          pageSizeOptions={[10, 25, 50]}
+          pageSizeOptions={pageSizeOptions}
           rowSelectionModel={rowSelectionModel}
           rows={rows}
-          initialState={{
-            pagination: {
-              paginationModel: { page: 0, pageSize: 10 },
-            },
-          }}
-          onRowSelectionModelChange={(newSelectionModel) => {
-            setRowSelectionModel(newSelectionModel);
-          }}
+          initialState={dataGridInitialState}
+          onRowSelectionModelChange={handleRowSelectionModelChange}
         />
       </Paper>
     </Stack>
+  );
+}
+
+export default function CurationPageDetailPage() {
+  return (
+    <Suspense fallback={null}>
+      <CurationPageDetailContent />
+    </Suspense>
   );
 }

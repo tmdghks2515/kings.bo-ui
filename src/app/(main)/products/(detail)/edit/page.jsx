@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Alert,
@@ -92,10 +92,11 @@ const toImagePayload = (images) =>
 
 const toDetailImagePayload = (images) => images.map((image) => image.storageKey);
 
-export default function ProductDetailPage() {
+function ProductDetailContent() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { productId } = useParams();
+  const searchParams = useSearchParams();
+  const productId = searchParams.get("productId");
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -263,5 +264,13 @@ export default function ProductDetailPage() {
         </Stack>
       </Paper>
     </Stack>
+  );
+}
+
+export default function ProductDetailPage() {
+  return (
+    <Suspense fallback={null}>
+      <ProductDetailContent />
+    </Suspense>
   );
 }

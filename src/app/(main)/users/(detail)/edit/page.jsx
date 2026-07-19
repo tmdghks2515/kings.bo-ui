@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
@@ -44,10 +44,11 @@ const toRoleOptions = (roles) => {
     .filter(Boolean);
 };
 
-export default function UserDetailPage() {
+function UserDetailContent() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { username } = useParams();
+  const searchParams = useSearchParams();
+  const username = searchParams.get("username");
   const [nickname, setNickname] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -224,5 +225,13 @@ export default function UserDetailPage() {
         </Stack>
       </Paper>
     </Stack>
+  );
+}
+
+export default function UserDetailPage() {
+  return (
+    <Suspense fallback={null}>
+      <UserDetailContent />
+    </Suspense>
   );
 }

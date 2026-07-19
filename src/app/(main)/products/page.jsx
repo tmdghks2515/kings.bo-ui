@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AddIcon from "@mui/icons-material/Add";
@@ -126,7 +127,11 @@ export default function ProductListPage() {
         flex: 0.8,
         minWidth: 150,
         renderCell: (params) => (
-          <Link color="primary" href={`/products/${params.row.code}`}>
+          <Link
+            color="primary"
+            component={NextLink}
+            href={`/products/edit?productId=${encodeURIComponent(params.row.code)}`}
+          >
             {params.value}
           </Link>
         ),

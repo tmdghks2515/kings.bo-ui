@@ -4,17 +4,18 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import CurationForm from "../_components/CurationForm";
 
-function CurationCreateContent() {
+function CurationDetailContent() {
   const searchParams = useSearchParams();
+  const curationId = searchParams.get("curationId");
   const curationPageId = searchParams.get("curationPageId");
 
-  return <CurationForm curationPageId={curationPageId} />;
+  return <CurationForm curationId={curationId} curationPageId={curationPageId} />;
 }
 
-export default function CurationCreatePage() {
+export default function CurationDetailPage() {
   return (
     <Suspense fallback={null}>
-      <CurationCreateContent />
+      <CurationDetailContent />
     </Suspense>
   );
 }

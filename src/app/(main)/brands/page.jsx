@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AddIcon from "@mui/icons-material/Add";
@@ -68,7 +69,11 @@ export default function BrandListPage() {
         flex: 0.8,
         minWidth: 180,
         renderCell: (params) => (
-          <Link color="primary" href={`/brands/${params.row.id}`}>
+          <Link
+            color="primary"
+            component={NextLink}
+            href={`/brands/edit?brandId=${params.row.id}`}
+          >
             {params.value}
           </Link>
         ),

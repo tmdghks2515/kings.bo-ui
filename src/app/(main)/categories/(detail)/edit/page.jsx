@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Alert,
@@ -68,10 +68,11 @@ const toChildCommands = (children, depth) =>
       children: [],
     }));
 
-export default function CategoryDetailPage() {
+function CategoryDetailContent() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { categoryId } = useParams();
+  const searchParams = useSearchParams();
+  const categoryId = searchParams.get("categoryId");
   const [name, setName] = useState("");
   const [sortOrder, setSortOrder] = useState(0);
   const [parentCategoryId, setParentCategoryId] = useState("");
@@ -233,5 +234,13 @@ export default function CategoryDetailPage() {
         </Stack>
       </Paper>
     </Stack>
+  );
+}
+
+export default function CategoryDetailPage() {
+  return (
+    <Suspense fallback={null}>
+      <CategoryDetailContent />
+    </Suspense>
   );
 }
