@@ -1,12 +1,30 @@
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import LogoutIcon from "@mui/icons-material/Logout";
-import { AppBar, Avatar, Box, Button, Divider, Stack, Toolbar, Typography } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import MenuOpenIcon from "@mui/icons-material/MenuOpen";
+import {
+  AppBar,
+  Avatar,
+  Box,
+  Button,
+  Divider,
+  IconButton,
+  Stack,
+  Toolbar,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import { authService } from "@/api/auth/authService";
 import { authTokenStorage } from "@/api/httpClient";
 import { useAuthStore } from "@/stores/authStore";
 
-export default function Header({ drawerWidth }) {
+export default function Header({
+  desktopDrawerWidth,
+  isDesktopLnbCollapsed,
+  onDesktopLnbToggle,
+  onMobileLnbOpen,
+}) {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const clearAuth = useAuthStore((state) => state.clearAuth);
@@ -32,12 +50,42 @@ export default function Header({ drawerWidth }) {
       sx={{
         borderBottom: 1,
         borderColor: "divider",
-        ml: { md: `${drawerWidth}px` },
-        width: { md: `calc(100% - ${drawerWidth}px)` },
-        zIndex: (theme) => theme.zIndex.drawer + 1,
+        ml: { md: `${desktopDrawerWidth}px` },
+        transition: (theme) =>
+          theme.transitions.create(["margin-left", "width"], {
+            duration: theme.transitions.duration.shorter,
+            easing: theme.transitions.easing.sharp,
+          }),
+        width: { md: `calc(100% - ${desktopDrawerWidth}px)` },
+        zIndex: (theme) => ({
+          xs: theme.zIndex.appBar,
+          md: theme.zIndex.drawer + 1,
+        }),
       }}
     >
       <Toolbar sx={{ minHeight: { xs: 56, md: 64 }, px: { xs: 2, md: 3 } }}>
+        <Tooltip title="메뉴 열기">
+          <IconButton
+            aria-label="메뉴 열기"
+            edge="start"
+            sx={{ display: { md: "none" }, mr: 1 }}
+            onClick={onMobileLnbOpen}
+          >
+            <MenuIcon />
+          </IconButton>
+        </Tooltip>
+
+        <Tooltip title={isDesktopLnbCollapsed ? "LNB 펼치기" : "LNB 접기"}>
+          <IconButton
+            aria-label={isDesktopLnbCollapsed ? "LNB 펼치기" : "LNB 접기"}
+            edge="start"
+            sx={{ display: { xs: "none", md: "inline-flex" }, mr: 1 }}
+            onClick={onDesktopLnbToggle}
+          >
+            {isDesktopLnbCollapsed ? <MenuIcon /> : <MenuOpenIcon />}
+          </IconButton>
+        </Tooltip>
+
         <Box sx={{ flex: 1, minWidth: 0 }} />
 
         <Stack
