@@ -19,7 +19,7 @@ const createUserFromToken = (accessToken) => {
 
 export const useAuthStore = create(
   persist(
-    (set) => ({
+    (set, get) => ({
       accessToken: null,
       tokenType: "Bearer",
       user: null,
@@ -41,6 +41,21 @@ export const useAuthStore = create(
         set((state) => ({
           user: createUserFromToken(state.accessToken),
         }));
+      },
+      validateAuth: () => {
+        const user = createUserFromToken(get().accessToken);
+
+        if (!user) {
+          set({
+            accessToken: null,
+            tokenType: "Bearer",
+            user: null,
+          });
+          return false;
+        }
+
+        set({ user });
+        return true;
       },
     }),
     {
